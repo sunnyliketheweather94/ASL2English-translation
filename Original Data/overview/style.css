@@ -1,0 +1,54 @@
+td#ffmpeg {
+            font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 13px; color: #111111; line-height: 125%;
+            background-color: #d5d3d5; border: #E2E7DD; border-style: solid;        
+            border-left-width: 1px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px;
+            font-style:italic;
+}
+td#convert {
+            font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 13px; color: #111111; line-height: 125%;
+            background-color: #d5d3d5; border: #E2E7DD; border-style: solid;        
+            border-left-width: 1px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px;
+            font-style:italic;
+}
+td#mplayer {
+            font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 13px; color: #111111; line-height: 125%;
+            background-color: #d5d3d5; border: #E2E7DD; border-style: solid;        
+            border-left-width: 1px; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px;
+            font-style:italic;
+}
+
+#td0 {
+    background-color: #ffffff
+}
+
+#td1 {
+    background-color: #f5f5f5
+}
+
+td#start {
+    color: #00e331; font:bold
+}
+
+td#end {
+    color: #c10000; font:bold
+}
+
+td#name {
+    color: #848ea0; font-size: 14px; font:bold
+}
+
+a {
+    color: #3c00ff; font-size: 13px; text-decoration:underline
+}
+
+td#speaker {
+    font-size: 12px; font:bold;
+}
+
+td#orth {
+    font-style:italic; font:bold; font-size:13px;
+}
+
+a#switch {
+    color: #3c00ff; font-size: 25px; text-decoration:underline
+} 
