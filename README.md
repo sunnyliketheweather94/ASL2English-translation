@@ -1,8 +1,9 @@
 # [CS 230 - Deep Learning](https://cs230.stanford.edu/) (Stanford University)
+## A Deep Learning Approach to Continuous ASL-English Translation
 Collaborators:
-- Sunny Shah (smshah94@stanford.edu)
-- Teresa Noyola (tnoyola@stanford.edu)
-- Georgia Sampaio (gsamp@stanford.edu)
+- Sunny Shah (smshah94@stanford.edu; Computational and Mathematical Engineering)
+- Teresa Noyola (tnoyola@stanford.edu; Computer Science)
+- Georgia Sampaio (gsamp@stanford.edu; Computer Science)
 
 This is a project on American Sign Language (ASL)-to-English translation using a combination of Convolutional Neural Networks (CNNs) and Recurrent Neural Networks (RNNs). We try to improve on the architecture discussed in Bantupalli and Xie (2018). 
 
