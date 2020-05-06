@@ -1,7 +1,7 @@
 # [CS 230 - Deep Learning](https://cs230.stanford.edu/) (Stanford University)
 ## A Deep Learning Approach to Continuous ASL-English Translation
 Collaborators:
-- Sunny Shah (smshah94@stanford.edu; Computational and Mathematical Engineering)
+- Sunny Shah (smshah94@stanford.edu; [Institute for Computational and Mathematical Engineering](https://icme.stanford.edu/))
 - Teresa Noyola (tnoyola@stanford.edu; Computer Science)
 - Georgia Sampaio (gsamp@stanford.edu; Computer Science)
 
