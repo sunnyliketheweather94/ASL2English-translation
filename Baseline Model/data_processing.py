@@ -1,7 +1,5 @@
 # used for processing the data
-import numpy as np 
 import pandas as pd 
-import matplotlib.pyplot as plt 
 import glob
 import os
 import cv2
@@ -88,6 +86,23 @@ class Dataset:
         for column, data in test.iteritems():
             self.test[column] = data.values
 
+        table = str.maketrans('', '', string.punctuation)
+        table["\n"] = None
+
+        label_dict = {}
+        i = 0
+        for sentence in df['labels']:
+            for word in sentence.split():
+                word = word.lower()
+
+                word = word.translate(table) # remove all punctuations
+
+                if word not in label_dict.keys():
+                    label_dict[word] = i
+                    i += 1
+
+        self.labels_dictionary = label_dict
+
 
     def get_trainData(self):
         return self.train 
@@ -128,4 +143,31 @@ class Dataset:
         data = self.df.loc[self.df['Video'] == video_number] 
 
         return (data['Label']).to_string(index=False)
+
+    def get_num_classes(self):
+        return len(self.labels_dictionary)
+
+    def get_oneHot(self, video_number):
+        '''
+        creates a vector from a given label such that if a word exists
+        in the label, the vector at the word's index (from labels_dict)
+        is 1 and others are all 0.
+
+        for example, if the dictionary was:
+            {'the' : 3,
+             'dog' : 6,
+             'ate' : 2}
+        then the vector:
+        [0 0 1 1 0 0 1 0 0 0] (assuming total number of words is 10)
+        '''
+        label = get_label(video_number)
+
+        label_dict = self.labels_dictionary
+        vec = np.zeros(len(label_dict))
+
+        for word in label.split():
+            vec[label_dict[word]] = 1
+
+        return vec
+
 
