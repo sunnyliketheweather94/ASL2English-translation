@@ -6,6 +6,7 @@ from tensorflow import keras
 from tensorflow.keras import layers, models
 from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input
 from tensorflow.keras.preprocessing import image
+import cv2
 
 
 class Inception_Model:
@@ -33,7 +34,7 @@ class Inception_Model:
 
     def extract_features(self, img_path):
         '''
-        We feed the features obtained from the final pool layer
+        We will feed the features obtained from the final pool layer
         into the LSTM.
         
         Arguments:
@@ -45,8 +46,9 @@ class Inception_Model:
             features[0]: the features of the image obtained from 
             the final pool layer of the network
         '''
-        img = image.load_image(img_path, target_size = (231, 299))
-        x = image.img_to_array(img)
+        img = cv2.imread(img_path)
+        img = cv2.resize(img, (299, 299))
+        x = np.array(img)
         x = np.expand_dims(x, axis = 0)
         x = preprocess_input(x)
 
