@@ -7,6 +7,8 @@ import os
 import cv2
 from sklearn.utils import shuffle
 
+import cnn
+
 
 # assume that we have labels already processed.
 # labels are stored in 'labels.csv' where the first column is the video number
@@ -17,9 +19,9 @@ class Dataset:
         num_frame: a list of the number of frames per video
                    the nth video's num_frame is num_frame[n - 1]
         file_names: a list of the file names of the videos
-        frame_matrices: an array of len(file_names) containing the
-                        3 normalized matrices of the pixel values
+        frame_paths: a list of paths to frames for videos in the data
         labels: a list of the true labels
+        df: the original dataframe containing all the information (in the original order) 
 
         they're all stored in a dictionary with the keys being train, dev
         and test, respectively. 
@@ -37,6 +39,7 @@ class Dataset:
         self.train = {}
         self.dev = {}
         self.test = {}
+        self.img_shape = (231, 299, 3)
 
         df = pd.read_csv(label_path)
 
@@ -49,41 +52,28 @@ class Dataset:
         df['Label'] = df['Translations']
         df.drop('Translations', axis = 1, inplace = True)
 
-        # get the frame matrices for each video
-        # path = '/Users/sunnyshah/Desktop/Spring 2020/CS 230/Project/Data/Processed Data'
-        # path_list = [os.path.join(folder, s) for folder, subfolder, _ in os.walk(path) for s in sorted(subfolder)]
-        # matrices_list = [] # to store the matrices for each video
+        path_list = [os.path.join(folder, s) for folder, subfolder, _ \
+                                in os.walk(data_path) for s in sorted(subfolder)]
 
-        # for path in path_list:
-        #     video_num = int(path.split('/')[-1]) # get the video number of current video
-        #     matrices = np.empty([0])
+        # obtain the paths for all the frames in the correct order
+        # and then append them to a list for a given video
+        # and then append that list to the frame_paths which will store
+        # all the frame paths (in order) for all the videos
+        frame_paths = []
+        for path in path_list:
+            video_num = int(path.split('/')[-1]) # get the video number of current video
 
-        #     paths = []
-        #     for filepath in glob.glob(path + '/*.jpg'):
-        #         paths.append(filepath) # store the paths of all the frames in the subdirectory
+            paths = []
+            for filepath in glob.glob(path + '/*.jpg'):
+                paths.append(filepath) # store the paths of all the frames in the subdirectory
 
-        #     paths.sort(key = lambda x : x.split('_')[1])
+            paths.sort(key = lambda x : x.split('_')[1])
+            frame_paths.append(paths)
 
-        #     for p in paths:
-        #         img = cv2.imread(p)
-        #         img = img[:, 3:302, :]
-        #         img = np.array(img) / 255
-        #         print(img.shape)
-        #         matrices = np.append(matrices, img)
-        #     print(matrices.shape)
-
-        #     matrices_list.append(matrices)
-
-        #     print("Video {} has {} frames.".format(video_num, matrices.shape[0]))
-
-        # df['frame_matrices'] = matrices_list
-
-
+        df['frame_paths'] = frame_paths
 
         self.df = df
         df = shuffle(df)
-
-        print(df.head())
 
         train = df[:152]
         dev = df[152:178]
@@ -111,17 +101,20 @@ class Dataset:
     def get_data(self):
         return self.train, self.dev, self.test
 
-    def get_frames(self, video_number):
-        # get the frame matrices for a given video
-        data = self.df.loc[self.df['Video'] == video_number]
-
-        return data['frame_matrices']
-
     def get_num_frames(self, video_number):
         # get the row corresponding to this video
         data = self.df.loc[self.df['Video'] == video_number] 
 
         return data['FramesPerVideo']
+
+    def get_frame_paths(self, video_number):
+        '''
+        returns a list of all the paths for each frame, in chronological order
+        '''
+        # get the row corresponding to this video
+        data = self.df.loc[self.df['Video'] == video_number]
+
+        return data['frame_paths']
 
     def print_label(self, video_number):
         # get the row corresponding to this video
@@ -130,13 +123,9 @@ class Dataset:
         print("The true label is: \"{}\"".\
                             format((data['Label']).to_string(index=False)))
 
+    def get_label(self, video_number):
+        # get the row corresponding to this video
+        data = self.df.loc[self.df['Video'] == video_number] 
 
-if __name__ == "__main__":
-    labels_path = os.path.join('./Data', 'labels.csv')
-    data_path = './Data/Processed Data/'
-
-    data = Dataset(data_path, labels_path)
-    train = data.get_testData()
-
-    data.print_label(12)
+        return (data['Label']).to_string(index=False)
 
