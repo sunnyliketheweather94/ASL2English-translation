@@ -53,7 +53,6 @@ class Dataset:
         # essentially rename the Translations column as the Label column
         df['Label'] = df['Translations']
         df['Label'] = df['Label'].astype("string")
-        print(df['Label'].head())
         df.drop('Translations', axis = 1, inplace = True)
 
         path_list = [os.path.join(folder, s) for folder, subfolder, _ \
@@ -80,7 +79,7 @@ class Dataset:
         self.max_frames = np.max([i for i in df['FramesPerVideo']])
 
         self.df = df
-        df = shuffle(df, random_state = 5)
+        df = shuffle(df)
 
         train = df[:-25] # :152
         test = df[-25:] # 181:
@@ -102,7 +101,6 @@ class Dataset:
         label_dict = {}
         i = 0
         for sentence in df['Label']:
-            # print(sentence)
             for word in sentence.split():
                 # convert the word into lowercase and remove all punctuations
                 word = word.lower()
@@ -161,7 +159,6 @@ class Dataset:
         data = self.df.loc[self.df['Video'] == video_number] 
         # print(data['Label'])
         label = (data['Label']).to_string(index=False)
-        print("Original - {}".format(label))
         
         table = str.maketrans('', '', string.punctuation)
         table["\n"] = None
@@ -169,7 +166,6 @@ class Dataset:
         # remove punctuations
         label = label.translate(table)
         label = label.lower()
-        print("Formatted - {}".format(label))
 
         return label
 
@@ -254,7 +250,7 @@ class Dataset:
         x_train is a np.array of shape (len(train), 2048, max_frames)
         x_test  is a np.array of shape (len(test),  2048, max_frames)
         '''
-        # model = cnn.Inception_Model()
+        model = cnn.Inception_Model()
 
         ##################################################
 
