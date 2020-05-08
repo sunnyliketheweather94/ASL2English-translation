@@ -202,9 +202,9 @@ class Dataset:
         [0 0 1 1 0 0 1 0 0 0] (assuming total number of words is 10)
         '''
         label = self.get_label(video_number)
-
         label_dict = self.labels_dictionary
-        vec = np.zeros(self.num_classes)
+
+        vec = np.zeros(self.max_frames)
 
         for word in label.split():
             vec[label_dict[word]] = 1
@@ -252,7 +252,7 @@ class Dataset:
         '''
         model = cnn.Inception_Model()
 
-        ##################################################
+        #################################################
 
         # for a given video in the dataset,
         # obtain a matrix of shape (2048, max_frames)
@@ -297,24 +297,30 @@ class Dataset:
         # for each video, obtain its true label
         # convert the label into its oneHot vector
         # stack up the vectors to get the matrix for y_train
-        y_train = np.zeros((self.get_num_classes(), len(self.train['Video'])))
+        # if self.num_classes >= self.max_frames:
+        #     y_train = np.zeros((self.get_num_classes(), len(self.train['Video'])))
+        y_train = np.zeros((len(self.train['Video']), self.max_frames))
+
         video_numbers = self.train['Video']
         i = 0
         for num in video_numbers:
-            y_train[:, i] = self.get_oneHot(num)
+            y_train[i, :] = self.get_oneHot(num)
 
         np.save('y_train.npy', y_train)
 
         # repeat the above procedure for y_test
-        y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
+        # if self.num_classes >= self.max_frames:
+        #     y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
+        y_test = np.zeros((len(self.test['Video']), self.max_frames))
+        
         video_numbers = self.test['Video']
         i = 0
         for num in video_numbers:
-            y_test[:, i] = self.get_oneHot(num)
+            y_test[i, :] = self.get_oneHot(num)
 
         np.save('y_test.npy', y_test)
 
         print("Size of y training set: {}".format(y_train.shape))
         print("Size of y testing set: {}".format(y_test.shape))
 
-        return x_train, y_train, x_test, y_test
+        return None, y_train, None, y_test
