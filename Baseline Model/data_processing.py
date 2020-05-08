@@ -51,6 +51,8 @@ class Dataset:
 
         # essentially rename the Translations column as the Label column
         df['Label'] = df['Translations']
+        df['Label'] = df['Label'].astype("string")
+        print(df['Label'].head())
         df.drop('Translations', axis = 1, inplace = True)
 
         path_list = [os.path.join(folder, s) for folder, subfolder, _ \
@@ -77,7 +79,7 @@ class Dataset:
         self.max_frames = np.max([i for i in df['FramesPerVideo']])
 
         self.df = df
-        df = shuffle(df)
+        df = shuffle(df, random_state = 5)
 
         train = df[:-25] # :152
         test = df[-25:] # 181:
@@ -99,6 +101,7 @@ class Dataset:
         label_dict = {}
         i = 0
         for sentence in df['Label']:
+            # print(sentence)
             for word in sentence.split():
                 # convert the word into lowercase and remove all punctuations
                 word = word.lower()
@@ -112,6 +115,9 @@ class Dataset:
 
         self.labels_dictionary = label_dict
         self.num_classes = i + 1
+
+
+        # self.print_dictionary()
 
     def get_trainData(self):
         return self.train 
@@ -152,14 +158,17 @@ class Dataset:
         '''
         # get the row corresponding to this video
         data = self.df.loc[self.df['Video'] == video_number] 
+        # print(data['Label'])
         label = (data['Label']).to_string(index=False)
-        label = label.lower()
-
+        print("Original - {}".format(label))
+        
         table = str.maketrans('', '', string.punctuation)
         table["\n"] = None
 
         # remove punctuations
         label = label.translate(table)
+        label = label.lower()
+        print("Formatted - {}".format(label))
 
         return label
 
@@ -244,7 +253,7 @@ class Dataset:
         x_train is a np.array of shape (len(train), 2048, max_frames)
         x_test  is a np.array of shape (len(test),  2048, max_frames)
         '''
-        model = cnn.Inception_Model()
+        # model = cnn.Inception_Model()
 
         ##################################################
 
@@ -253,37 +262,39 @@ class Dataset:
             # each column is a prediction from the pretrained CNN for each frame
             # column 0 is the (2048,)-vector for frame 0, etc.
         # stack up the matrices to obtain a gigantic matrix for the x_train
-        video_numbers = self.train['Video']
+        # video_numbers = self.train['Video']
 
-        matrices = self.get_matrix(video_numbers[0], model)
-        matrices = self.padding(matrices)
+        # matrices = self.get_matrix(video_numbers[0], model)
+        # matrices = self.padding(matrices)
 
-        for num in video_numbers[1:]:
-            temp = self.get_matrix(num, model)
-            temp = self.padding(temp)
-            matrices = np.dstack((matrices, temp))
+        # for num in video_numbers[1:]:
+        #     temp = self.get_matrix(num, model)
+        #     temp = self.padding(temp)
+        #     matrices = np.dstack((matrices, temp))
 
-        x_train = matrices.reshape(-1, 2048, self.max_frames)
+        # x_train = matrices.reshape(-1, 2048, self.max_frames)
 
-        print("Size of x training set: {}".format(x_train.shape))
+        # print("Size of x training set: {}".format(x_train.shape))
+        # np.save('x_train.npy', x_train)
 
-        ##################################################
+        # ##################################################
 
-        # repeat above procedure for x_test
-        video_numbers = self.test['Video']
-        max_frames = np.max(self.test['FramesPerVideo'])
+        # # repeat above procedure for x_test
+        # video_numbers = self.test['Video']
+        # max_frames = np.max(self.test['FramesPerVideo'])
 
-        matrices = self.get_matrix(video_numbers[0], model)
-        matrices = self.padding(matrices)
+        # matrices = self.get_matrix(video_numbers[0], model)
+        # matrices = self.padding(matrices)
 
-        for num in video_numbers[1:]:
-            temp = self.get_matrix(num, model)
-            temp = self.padding(temp)
-            matrices = np.dstack((matrices, temp))
+        # for num in video_numbers[1:]:
+        #     temp = self.get_matrix(num, model)
+        #     temp = self.padding(temp)
+        #     matrices = np.dstack((matrices, temp))
 
-        x_test = matrices.reshape(-1, 2048, self.max_frames)
+        # x_test = matrices.reshape(-1, 2048, self.max_frames)
 
-        print("Size of x testing set: {}".format(x_test.shape))
+        # print("Size of x testing set: {}".format(x_test.shape))
+        # np.save('x_test.npy', x_test)
 
         ##################################################
 
@@ -296,6 +307,8 @@ class Dataset:
         for num in video_numbers:
             y_train[:, i] = self.get_oneHot(num)
 
+        np.save('y_train.npy', y_train)
+
         # repeat the above procedure for y_test
         y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
         video_numbers = self.test['Video']
@@ -303,9 +316,9 @@ class Dataset:
         for num in video_numbers:
             y_test[:, i] = self.get_oneHot(num)
 
+        np.save('y_test.npy', y_test)
 
         print("Size of y training set: {}".format(y_train.shape))
         print("Size of y testing set: {}".format(y_test.shape))
-
 
         return x_train, y_train, x_test, y_test
