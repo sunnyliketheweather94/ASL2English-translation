@@ -1,9 +1,13 @@
 # used for processing the data
+import numpy as np
 import pandas as pd 
 import glob
 import os
 import cv2
 from sklearn.utils import shuffle
+import tensorflow.keras.preprocessing as pre 
+from sklearn.model_selection import train_test_split as split 
+import string
 
 import cnn
 
@@ -73,9 +77,9 @@ class Dataset:
         self.df = df
         df = shuffle(df)
 
-        train = df[:152]
-        dev = df[152:178]
-        test = df[178:]
+        train = df[:3] # :152
+        dev = df[152:177] # 152:177
+        test = df[-2:] # 181:
 
         print("Train data: {}".format(len(train)))
         print("Dev data: {}".format(len(dev)))
@@ -95,7 +99,7 @@ class Dataset:
 
         label_dict = {}
         i = 0
-        for sentence in df['labels']:
+        for sentence in df['Label']:
             for word in sentence.split():
                 word = word.lower()
 
@@ -106,6 +110,10 @@ class Dataset:
                     i += 1
 
         self.labels_dictionary = label_dict
+        self.num_classes = i + 1
+
+
+        # self.print_dictionary()
 
 
     def get_trainData(self):
@@ -123,7 +131,7 @@ class Dataset:
     def get_num_frames(self, video_number):
         # get the row corresponding to this video
         data = self.df.loc[self.df['Video'] == video_number] 
-        return data['FramesPerVideo'].to_numpy()
+        return np.squeeze(data['FramesPerVideo'].to_numpy())
 
     def get_frame_paths(self, video_number):
         '''
@@ -144,10 +152,23 @@ class Dataset:
     def get_label(self, video_number):
         # get the row corresponding to this video
         data = self.df.loc[self.df['Video'] == video_number] 
-        return (data['Label']).to_string(index=False)
+        label = (data['Label']).to_string(index=False)
+        label = label.lower()
+
+        table = str.maketrans('', '', string.punctuation)
+        table["\n"] = None
+
+        # remove punctuations
+        label = label.translate(table)
+
+        return label
+
+    def print_dictionary(self):
+        for k, v in self.labels_dictionary.items():
+            print("{}: {}".format(v, k))
 
     def get_num_classes(self):
-        return len(self.labels_dictionary)
+        return self.num_classes
 
     def get_oneHot(self, video_number):
         '''
@@ -162,81 +183,116 @@ class Dataset:
         then the vector:
         [0 0 1 1 0 0 1 0 0 0] (assuming total number of words is 10)
         '''
-        label = get_label(video_number)
+        label = self.get_label(video_number)
 
         label_dict = self.labels_dictionary
-        vec = np.zeros(len(label_dict))
+        vec = np.zeros(self.num_classes)
+
+        print(label.split())
 
         for word in label.split():
             vec[label_dict[word]] = 1
 
         return vec
 
+    def get_matrix(self, num, model):
+        '''
+        returns a matrix of shape (2048, num_frames)
+        where num_frames is the number of images extracted from the given video
+        '''
+        print("Getting the matrix for video {}".format(num))
+        x = []
+        paths = self.get_frame_paths(num)
+        temp = np.zeros((2048, self.get_num_frames(num)))
+        i = 0
+
+        for p in paths:
+            temp[:, i] = model.extract_features(p)
+            i += 1
+
+        return temp
+
+    def padding(self, matrix, max_frames):
+        '''
+        adds 0's to all matrices whose columns is less than max_frames
+        where max_frames is the max_frames for that type of data (training/test, etc.)
+        '''
+        rows, cols = matrix.shape
+
+        assert(cols <= max_frames)
+
+        empty = np.zeros((2048, max_frames))
+        empty[:rows, :cols] = matrix
+
+        return empty
+
     def get_data_for_RNN(self):
         model = cnn.Inception_Model()
 
         x_train = []
-        video_numbers = self.train['Video']
-        for num in video_numbers:
-            paths = get_frame_paths(num) # get list of paths to all images for video
-            temp = np.zeros(get_num_frames(num), 2048)
-            i = 0
-
-            for p in paths:
-                temp[i, :] = model.extract_features(p)
-                i += 1
-
-            x_train.append(temp)
-
-        x_train = np.array(x_train)
-
         x_test = []
+        y_train = []
+        y_test = []
+
+        ##################################################
+
+        video_numbers = self.train['Video']
+        max_frames = np.max(self.train['FramesPerVideo'])
+
+        matrices = self.get_matrix(video_numbers[0], model)
+        matrices = self.padding(matrices, max_frames)
+
+        
+        # print("Max number of frames = {}".format(max_frames))
+        for num in video_numbers[1:]:
+            temp = self.get_matrix(num, model)
+            temp = self.padding(temp, max_frames)
+            matrices = np.dstack((matrices, temp))
+
+        x_train = matrices.reshape(-1, 2048, max_frames)
+
+        print("Size of x training set: {}".format(x_train.shape))
+
+        ##################################################
+
         video_numbers = self.test['Video']
-        for num in video_numbers:
-            paths = get_frame_paths(num) # get list of paths to all images for video
-            temp = np.zeros(get_num_frames(num), 2048)
-            i = 0
+        max_frames = np.max(self.test['FramesPerVideo'])
 
-            for p in paths:
-                temp[i, :] = model.extract_features(p)
-                i += 1
+        matrices = self.get_matrix(video_numbers[0], model)
+        matrices = self.padding(matrices, max_frames)
 
-            x_test.append(temp)
+        # print("Max number of frames = {}".format(max_frames))
+        for num in video_numbers[1:]:
+            temp = self.get_matrix(num, model)
+            temp = self.padding(temp, max_frames)
+            matrices = np.dstack((matrices, temp))
 
-        x_test = np.array(x_test)
+        x_test = matrices.reshape(-1, 2048, max_frames)
 
-        x_dev = []
-        video_numbers = self.dev['Video']
-        for num in video_numbers:
-            paths = get_frame_paths(num) # get list of paths to all images for video
-            temp = np.zeros(get_num_frames(num), 2048)
-            i = 0
+        print("Size of x testing set: {}".format(x_test.shape))
 
-            for p in paths:
-                temp[:, i] = model.extract_features(p)
-                i += 1
+        ##################################################
 
-            x_dev.append(temp)
-
-        x_dev = np.array(x_dev)
-
-
-        y_train = np.zeros((get_num_classes(), len(self.train['Video'])))
+        y_train = np.zeros((self.get_num_classes(), len(self.train['Video'])))
         video_numbers = self.train['Video']
         i = 0
         for num in video_numbers:
-            y_train[:, i] = get_oneHot(num)
+            y_train[:, i] = self.get_oneHot(num)
 
-        y_test = np.zeros((get_num_classes(), len(self.test['Video'])))
+        y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
         video_numbers = self.test['Video']
         i = 0
         for num in video_numbers:
-            y_test[:, i] = get_oneHot(num)
+            y_test[:, i] = self.get_oneHot(num)
 
-        y_dev = np.zeros((get_num_classes(), len(self.dev['Video'])))
-        video_numbers = self.train['Video']
-        i = 0
-        for num in video_numbers:
-            y_dev[:, i] = get_oneHot(num)
+        # y_dev = np.zeros((self.get_num_classes(), len(self.dev['Video'])))
+        # video_numbers = self.train['Video']
+        # i = 0
+        # for num in video_numbers:
+        #     y_dev[:, i] = get_oneHot(num)
 
-        return x_train, y_train, x_dev, y_dev, x_test, y_test
+        print("Size of y training set: {}".format(y_train.shape))
+        print("Size of y testing set: {}".format(y_test.shape))
+
+
+        return x_train, y_train, x_test, y_test
