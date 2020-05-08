@@ -23,9 +23,8 @@ video_num = train['Video']
 num = train['Video'][0]
 
 paths = data.get_frame_paths(num)
-p_list = [i for p in paths for i in p]
 
-f = model.extract_features(p_list[0])
+f = model.extract_features(paths[0])
 print(f)
 print(len(f))
 

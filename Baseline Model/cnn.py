@@ -47,7 +47,6 @@ class Inception_Model:
             the final pool layer of the network
         '''
         img = cv2.imread(img_path)
-        img = cv2.resize(img, (299, 299))
         x = np.array(img)
         x = np.expand_dims(x, axis = 0)
         x = preprocess_input(x)

@@ -77,6 +77,10 @@ class Dataset:
         dev = df[152:178]
         test = df[178:]
 
+        print("Train data: {}".format(len(train)))
+        print("Dev data: {}".format(len(dev)))
+        print("Test data: {}".format(len(test)))
+
         for column, data in train.iteritems():
             self.train[column] = data.values
 
@@ -119,8 +123,7 @@ class Dataset:
     def get_num_frames(self, video_number):
         # get the row corresponding to this video
         data = self.df.loc[self.df['Video'] == video_number] 
-
-        return data['FramesPerVideo']
+        return data['FramesPerVideo'].to_numpy()
 
     def get_frame_paths(self, video_number):
         '''
@@ -128,8 +131,8 @@ class Dataset:
         '''
         # get the row corresponding to this video
         data = self.df.loc[self.df['Video'] == video_number]
-
-        return data['frame_paths']
+        paths = [i for p in data['frame_paths'] for i in p]
+        return paths
 
     def print_label(self, video_number):
         # get the row corresponding to this video
@@ -141,7 +144,6 @@ class Dataset:
     def get_label(self, video_number):
         # get the row corresponding to this video
         data = self.df.loc[self.df['Video'] == video_number] 
-
         return (data['Label']).to_string(index=False)
 
     def get_num_classes(self):
@@ -170,4 +172,71 @@ class Dataset:
 
         return vec
 
+    def get_data_for_RNN(self):
+        model = cnn.Inception_Model()
 
+        x_train = []
+        video_numbers = self.train['Video']
+        for num in video_numbers:
+            paths = get_frame_paths(num) # get list of paths to all images for video
+            temp = np.zeros(get_num_frames(num), 2048)
+            i = 0
+
+            for p in paths:
+                temp[i, :] = model.extract_features(p)
+                i += 1
+
+            x_train.append(temp)
+
+        x_train = np.array(x_train)
+
+        x_test = []
+        video_numbers = self.test['Video']
+        for num in video_numbers:
+            paths = get_frame_paths(num) # get list of paths to all images for video
+            temp = np.zeros(get_num_frames(num), 2048)
+            i = 0
+
+            for p in paths:
+                temp[i, :] = model.extract_features(p)
+                i += 1
+
+            x_test.append(temp)
+
+        x_test = np.array(x_test)
+
+        x_dev = []
+        video_numbers = self.dev['Video']
+        for num in video_numbers:
+            paths = get_frame_paths(num) # get list of paths to all images for video
+            temp = np.zeros(get_num_frames(num), 2048)
+            i = 0
+
+            for p in paths:
+                temp[:, i] = model.extract_features(p)
+                i += 1
+
+            x_dev.append(temp)
+
+        x_dev = np.array(x_dev)
+
+
+        y_train = np.zeros((get_num_classes(), len(self.train['Video'])))
+        video_numbers = self.train['Video']
+        i = 0
+        for num in video_numbers:
+            y_train[:, i] = get_oneHot(num)
+
+        y_test = np.zeros((get_num_classes(), len(self.test['Video'])))
+        video_numbers = self.test['Video']
+        i = 0
+        for num in video_numbers:
+            y_test[:, i] = get_oneHot(num)
+
+        y_dev = np.zeros((get_num_classes(), len(self.dev['Video'])))
+        video_numbers = self.train['Video']
+        i = 0
+        for num in video_numbers:
+            y_dev[:, i] = get_oneHot(num)
+
+        return x_train, y_train, x_dev, y_dev, x_test, y_test
