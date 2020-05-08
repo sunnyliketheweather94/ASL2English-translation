@@ -11,6 +11,7 @@ import string
 
 import cnn
 
+pd.set_option('display.max_colwidth', 100)
 
 # assume that we have labels already processed.
 # labels are stored in 'labels.csv' where the first column is the video number
@@ -259,42 +260,41 @@ class Dataset:
 
         # for a given video in the dataset,
         # obtain a matrix of shape (2048, max_frames)
-            # each column is a prediction from the pretrained CNN for each frame
-            # column 0 is the (2048,)-vector for frame 0, etc.
+        #     each column is a prediction from the pretrained CNN for each frame
+        #     column 0 is the (2048,)-vector for frame 0, etc.
         # stack up the matrices to obtain a gigantic matrix for the x_train
-        # video_numbers = self.train['Video']
+        video_numbers = self.train['Video']
 
-        # matrices = self.get_matrix(video_numbers[0], model)
-        # matrices = self.padding(matrices)
+        matrices = self.get_matrix(video_numbers[0], model)
+        matrices = self.padding(matrices)
 
-        # for num in video_numbers[1:]:
-        #     temp = self.get_matrix(num, model)
-        #     temp = self.padding(temp)
-        #     matrices = np.dstack((matrices, temp))
+        for num in video_numbers[1:]:
+            temp = self.get_matrix(num, model)
+            temp = self.padding(temp)
+            matrices = np.dstack((matrices, temp))
 
-        # x_train = matrices.reshape(-1, 2048, self.max_frames)
+        x_train = matrices.reshape(-1, 2048, self.max_frames)
 
-        # print("Size of x training set: {}".format(x_train.shape))
-        # np.save('x_train.npy', x_train)
+        print("Size of x training set: {}".format(x_train.shape))
+        np.save('x_train.npy', x_train)
 
         # ##################################################
 
-        # # repeat above procedure for x_test
-        # video_numbers = self.test['Video']
-        # max_frames = np.max(self.test['FramesPerVideo'])
+        # repeat above procedure for x_test
+        video_numbers = self.test['Video']
 
-        # matrices = self.get_matrix(video_numbers[0], model)
-        # matrices = self.padding(matrices)
+        matrices = self.get_matrix(video_numbers[0], model)
+        matrices = self.padding(matrices)
 
-        # for num in video_numbers[1:]:
-        #     temp = self.get_matrix(num, model)
-        #     temp = self.padding(temp)
-        #     matrices = np.dstack((matrices, temp))
+        for num in video_numbers[1:]:
+            temp = self.get_matrix(num, model)
+            temp = self.padding(temp)
+            matrices = np.dstack((matrices, temp))
 
-        # x_test = matrices.reshape(-1, 2048, self.max_frames)
+        x_test = matrices.reshape(-1, 2048, self.max_frames)
 
-        # print("Size of x testing set: {}".format(x_test.shape))
-        # np.save('x_test.npy', x_test)
+        print("Size of x testing set: {}".format(x_test.shape))
+        np.save('x_test.npy', x_test)
 
         ##################################################
 
