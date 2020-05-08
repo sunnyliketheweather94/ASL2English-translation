@@ -22,8 +22,8 @@ class RNN_model:
         '''
         return self.model
 
-def train_test_RNN(data, X_train, Y_train, test_x, test_y):
+def train_test_RNN(data, x_train, y_train, x_test, y_test):
     rnn = RNN_model(data)
     model = rnn.get_model()
-    model.fit(X_train, Y_train, epochs = 10, batch_size = 32)
-    test_loss, acc = model.evaluate(test_x, test_y)
+    model.fit(x_train, y_train, epochs = 10, batch_size = 32)
+    test_loss, acc = model.evaluate(x_test, y_test)

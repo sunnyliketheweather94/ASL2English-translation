@@ -28,4 +28,5 @@ f = model.extract_features(paths[0])
 print(f)
 print(len(f))
 
-rnn.train_test_RNN(data, X_train, Y_train, test_x, test_y)
+x_train, y_train, x_dev, y_dev, x_test, y_test = data_processing.get_data_for_RNN()
+rnn.train_test_RNN(data, x_train, y_train, x_test, y_test)
