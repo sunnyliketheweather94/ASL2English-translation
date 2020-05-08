@@ -39,7 +39,6 @@ class Dataset:
         label_path: the path to the processed label csv file
         '''
         self.train = {}
-        self.dev = {}
         self.test = {}
         self.img_shape = (231, 299, 3)
 
@@ -74,22 +73,20 @@ class Dataset:
 
         df['frame_paths'] = frame_paths
 
+        # obtain the maximum number of frames in all the videos
+        self.max_frames = np.max([i for i in df['FramesPerVideo']])
+
         self.df = df
         df = shuffle(df)
 
-        train = df[:3] # :152
-        dev = df[152:177] # 152:177
-        test = df[-2:] # 181:
+        train = df[:-25] # :152
+        test = df[-25:] # 181:
 
         print("Train data: {}".format(len(train)))
-        print("Dev data: {}".format(len(dev)))
         print("Test data: {}".format(len(test)))
 
         for column, data in train.iteritems():
             self.train[column] = data.values
-
-        for column, data in dev.iteritems():
-            self.dev[column] = data.values
 
         for column, data in test.iteritems():
             self.test[column] = data.values
@@ -97,14 +94,18 @@ class Dataset:
         table = str.maketrans('', '', string.punctuation)
         table["\n"] = None
 
+        # create a dictionary of all the words in the labels
+        # the value for each word is going to be its index in the oneHot encoding 
         label_dict = {}
         i = 0
         for sentence in df['Label']:
             for word in sentence.split():
+                # convert the word into lowercase and remove all punctuations
                 word = word.lower()
+                word = word.translate(table) 
 
-                word = word.translate(table) # remove all punctuations
-
+                # if the word doesn't exist in the dictionary already..
+                # add it and increment the counter
                 if word not in label_dict.keys():
                     label_dict[word] = i
                     i += 1
@@ -112,23 +113,19 @@ class Dataset:
         self.labels_dictionary = label_dict
         self.num_classes = i + 1
 
-
-        # self.print_dictionary()
-
-
     def get_trainData(self):
         return self.train 
-
-    def get_devData(self):
-        return self.dev 
 
     def get_testData(self):
         return self.test 
 
     def get_data(self):
-        return self.train, self.dev, self.test
+        return self.train, self.test
 
     def get_num_frames(self, video_number):
+        '''
+        obtain the number of frames for a given video
+        '''
         # get the row corresponding to this video
         data = self.df.loc[self.df['Video'] == video_number] 
         return np.squeeze(data['FramesPerVideo'].to_numpy())
@@ -150,6 +147,9 @@ class Dataset:
                             format((data['Label']).to_string(index=False)))
 
     def get_label(self, video_number):
+        '''
+        obtain the true label for a given video
+        '''
         # get the row corresponding to this video
         data = self.df.loc[self.df['Video'] == video_number] 
         label = (data['Label']).to_string(index=False)
@@ -164,11 +164,23 @@ class Dataset:
         return label
 
     def print_dictionary(self):
+        '''
+        print the contents of the dictionary
+        '''
         for k, v in self.labels_dictionary.items():
             print("{}: {}".format(v, k))
 
     def get_num_classes(self):
+        '''
+        obtain the maximum number of words available in the dictionary
+        '''
         return self.num_classes
+
+    def get_max_frames(self):
+        '''
+        obtain the maximum number of frames amongst all the videos in the dataset
+        '''
+        return self.max_frames
 
     def get_oneHot(self, video_number):
         '''
@@ -187,8 +199,6 @@ class Dataset:
 
         label_dict = self.labels_dictionary
         vec = np.zeros(self.num_classes)
-
-        print(label.split())
 
         for word in label.split():
             vec[label_dict[word]] = 1
@@ -212,11 +222,12 @@ class Dataset:
 
         return temp
 
-    def padding(self, matrix, max_frames):
+    def padding(self, matrix):
         '''
-        adds 0's to all matrices whose columns is less than max_frames
+        adds vectors of all 0's to all matrices whose columns is less than max_frames
         where max_frames is the max_frames for that type of data (training/test, etc.)
         '''
+        max_frames = self.max_frames
         rows, cols = matrix.shape
 
         assert(cols <= max_frames)
@@ -227,69 +238,71 @@ class Dataset:
         return empty
 
     def get_data_for_RNN(self):
-        model = cnn.Inception_Model()
+        '''
+        obtain the training and test data
 
-        x_train = []
-        x_test = []
-        y_train = []
-        y_test = []
+        x_train is a np.array of shape (len(train), 2048, max_frames)
+        x_test  is a np.array of shape (len(test),  2048, max_frames)
+        '''
+        model = cnn.Inception_Model()
 
         ##################################################
 
+        # for a given video in the dataset,
+        # obtain a matrix of shape (2048, max_frames)
+            # each column is a prediction from the pretrained CNN for each frame
+            # column 0 is the (2048,)-vector for frame 0, etc.
+        # stack up the matrices to obtain a gigantic matrix for the x_train
         video_numbers = self.train['Video']
-        max_frames = np.max(self.train['FramesPerVideo'])
 
         matrices = self.get_matrix(video_numbers[0], model)
-        matrices = self.padding(matrices, max_frames)
+        matrices = self.padding(matrices)
 
-        
-        # print("Max number of frames = {}".format(max_frames))
         for num in video_numbers[1:]:
             temp = self.get_matrix(num, model)
-            temp = self.padding(temp, max_frames)
+            temp = self.padding(temp)
             matrices = np.dstack((matrices, temp))
 
-        x_train = matrices.reshape(-1, 2048, max_frames)
+        x_train = matrices.reshape(-1, 2048, self.max_frames)
 
         print("Size of x training set: {}".format(x_train.shape))
 
         ##################################################
 
+        # repeat above procedure for x_test
         video_numbers = self.test['Video']
         max_frames = np.max(self.test['FramesPerVideo'])
 
         matrices = self.get_matrix(video_numbers[0], model)
-        matrices = self.padding(matrices, max_frames)
+        matrices = self.padding(matrices)
 
-        # print("Max number of frames = {}".format(max_frames))
         for num in video_numbers[1:]:
             temp = self.get_matrix(num, model)
-            temp = self.padding(temp, max_frames)
+            temp = self.padding(temp)
             matrices = np.dstack((matrices, temp))
 
-        x_test = matrices.reshape(-1, 2048, max_frames)
+        x_test = matrices.reshape(-1, 2048, self.max_frames)
 
         print("Size of x testing set: {}".format(x_test.shape))
 
         ##################################################
 
+        # for each video, obtain its true label
+        # convert the label into its oneHot vector
+        # stack up the vectors to get the matrix for y_train
         y_train = np.zeros((self.get_num_classes(), len(self.train['Video'])))
         video_numbers = self.train['Video']
         i = 0
         for num in video_numbers:
             y_train[:, i] = self.get_oneHot(num)
 
+        # repeat the above procedure for y_test
         y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
         video_numbers = self.test['Video']
         i = 0
         for num in video_numbers:
             y_test[:, i] = self.get_oneHot(num)
 
-        # y_dev = np.zeros((self.get_num_classes(), len(self.dev['Video'])))
-        # video_numbers = self.train['Video']
-        # i = 0
-        # for num in video_numbers:
-        #     y_dev[:, i] = get_oneHot(num)
 
         print("Size of y training set: {}".format(y_train.shape))
         print("Size of y testing set: {}".format(y_test.shape))
