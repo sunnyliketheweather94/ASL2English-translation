@@ -4,7 +4,7 @@ import os
 import cv2
 
 import cnn
-# import rnn
+import rnn
 import data_processing
 
 
@@ -28,3 +28,5 @@ p_list = [i for p in paths for i in p]
 f = model.extract_features(p_list[0])
 print(f)
 print(len(f))
+
+rnn.train_test_RNN(data, X_train, Y_train, test_x, test_y)
