@@ -9,8 +9,8 @@ import data_processing
 
 
 
-labels_path = os.path.join('../../Data', 'labels.csv')
-data_path = '../../Data/Processed Data/'
+labels_path = os.path.join('../../Data', 'labels.csv') ##CHANGE THIS
+data_path = '../../Data/Processed Data/' #CHANGE THIS
 
 data = data_processing.Dataset(data_path, labels_path)
 train = data.get_testData()
