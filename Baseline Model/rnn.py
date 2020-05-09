@@ -24,20 +24,20 @@ class RNN_model:
         metrics = accuracy
         '''
         model = models.Sequential()
-        # inputs = 
+
         model.add(keras.Input(shape = [input_size, frames]))
-        model.add(layers.LSTM(64, dropout = 0.2, return_sequences = True))
-        model.add(layers.LSTM(64, dropout = 0.2, return_sequences = True))
-        model.add(layers.LSTM(64, dropout = 0.2))
+        model.add(layers.LSTM(64, dropout = 0.5, return_sequences = True))
+        model.add(layers.LSTM(64, dropout = 0.5, return_sequences = True))
+        model.add(layers.LSTM(64, dropout = 0.5))
         model.add(layers.Dense(data.get_num_classes(), activation = 'softmax'))
-        model.compile(optimizer = 'Adam', loss = "categorical_crossentropy", metrics = ['accuracy', 'categorical_accuracy'])
+        model.compile(optimizer = 'Adam', loss = "categorical_crossentropy", metrics = ['categorical_accuracy'])
         self.model = model
 
     def get_model(self):
         '''
         Returns:
         --------
-            self.model: the rnn being used
+            self.model: the RNN being used
         '''
         return self.model
 
@@ -57,10 +57,10 @@ def train_test_RNN(data, xtr_path, ytr_path, xts_path, yts_path):
 
     print(model.summary())
 
-    history = model.fit(x_train, y_train, epochs = 10, batch_size = 32)
+    history = model.fit(x_train, y_train, epochs = 17, batch_size = 64)
     x = model.evaluate(x_test, y_test)
 
-    print(x)
+    print("Test evaluation:\nLoss = {}\nCategorical Accuracy = {}".format(x[0], x[1]))
 
     # plot the accuracy over epochs
     plt.plot(history.history['categorical_accuracy'])
@@ -69,14 +69,7 @@ def train_test_RNN(data, xtr_path, ytr_path, xts_path, yts_path):
     plt.ylabel('Accuracy')
     plt.show()
 
-    # plot the categorical accuracy over epochs
-    plt.plot(history.history['accuracy'])
-    plt.title('Model accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.show()
-
-    # plot the losses
+    # plot the loss over epochs
     plt.plot(history.history['loss'])
     plt.title('Model loss')
     plt.xlabel('Epoch')
