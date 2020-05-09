@@ -204,7 +204,7 @@ class Dataset:
         label = self.get_label(video_number)
         label_dict = self.labels_dictionary
 
-        vec = np.zeros(self.max_frames)
+        vec = np.zeros(self.num_classes)
 
         for word in label.split():
             vec[label_dict[word]] = 1
@@ -252,7 +252,7 @@ class Dataset:
         '''
         model = cnn.Inception_Model()
 
-        #################################################
+        ################################################
 
         # for a given video in the dataset,
         # obtain a matrix of shape (2048, max_frames)
@@ -299,7 +299,7 @@ class Dataset:
         # stack up the vectors to get the matrix for y_train
         # if self.num_classes >= self.max_frames:
         #     y_train = np.zeros((self.get_num_classes(), len(self.train['Video'])))
-        y_train = np.zeros((len(self.train['Video']), self.max_frames))
+        y_train = np.zeros((len(self.train['Video']), self.num_classes))
 
         video_numbers = self.train['Video']
         i = 0
@@ -311,7 +311,7 @@ class Dataset:
         # repeat the above procedure for y_test
         # if self.num_classes >= self.max_frames:
         #     y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
-        y_test = np.zeros((len(self.test['Video']), self.max_frames))
+        y_test = np.zeros((len(self.test['Video']), self.num_classes))
         
         video_numbers = self.test['Video']
         i = 0
