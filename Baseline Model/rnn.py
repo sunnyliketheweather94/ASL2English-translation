@@ -58,7 +58,9 @@ def train_test_RNN(data, xtr_path, ytr_path, xts_path, yts_path):
     print(model.summary())
 
     history = model.fit(x_train, y_train, epochs = 10, batch_size = 32)
-    test_loss, acc = model.evaluate(x_test, y_test)
+    x = model.evaluate(x_test, y_test)
+
+    print(x)
 
     # plot the accuracy over epochs
     plt.plot(history.history['categorical_accuracy'])
