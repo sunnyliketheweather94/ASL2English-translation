@@ -29,7 +29,7 @@ class RNN_model:
         model.add(layers.LSTM(64, dropout = 0.2, return_sequences = True))
         model.add(layers.LSTM(64, dropout = 0.2, return_sequences = True))
         model.add(layers.LSTM(64, dropout = 0.2))
-        model.add(layers.Dense(data.get_max_frames(), activation = 'softmax'))
+        model.add(layers.Dense(data.get_num_classes(), activation = 'softmax'))
         model.compile(optimizer = 'Adam', loss = "categorical_crossentropy", metrics = ['accuracy', 'categorical_accuracy'])
         self.model = model
 
