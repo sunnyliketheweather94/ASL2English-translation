@@ -10,15 +10,42 @@ import cv2
 
 
 class Inception_Model:
-    def __init__(self):
+    def __init__(self, retrain):
         '''
         we set up the InceptionV3 model but end it at the final pool layer
         so that the features can be extracted from here and then 
         be inputted into the upcoming LSTM
         '''
+        self.retrain = retrain 
+        if retrain:
+            self.model_1, self.model_2 = setup_retrain_model()
+
+        else:
+            self.model = setup_model()
+
+    def setup_new_model(self):
+        # CNN but with the pretrained + new weights layers
         base_model = InceptionV3(weights = 'imagenet', include_top = True)
-        self.model = models.Model(inputs = base_model.input,
+        model = models.Model(inputs = base_model.input, )
+
+    def setup_model(self):
+        base_model = InceptionV3(weights = 'imagenet', include_top = True)
+        model = models.Model(inputs = base_model.input,
+                                  outputs = base_model.get_layer('avg_pool').output) 
+                                  
+        return model       
+
+    def setup_retrain_model(self):
+        # CNN (frozen + trainable layers)
+        # trainable layers will be trained and weights saved
+        base_model = InceptionV3(weights = 'imagenet', include_top = True)
+        model_1 = models.Model(inputs = base_model.input,
+                                  outputs = base_model.get_layer('avg_pool_7').output)
+
+        model_2 = models.Model(inputs = base_model.get_layer('conv2d_70').input,
                                   outputs = base_model.get_layer('avg_pool').output)
+
+        return model_1, model_2
 
     def get_model(self):
         '''
@@ -30,6 +57,27 @@ class Inception_Model:
         on a million or so images, called the ImageNet
         '''
         return self.model
+
+
+    def model_retrain(self):
+        # load x_train, y_train, x_test, y_test
+        # input each column of the matrices (for each video) into the input layer of model_2
+        # use the y_train as training labels
+        # use the categorical_crossentropy function
+        # maybe look into the retraining of Inception-V3??
+
+        # set up different vectors (each makes up a column of a matrix for a video)
+        # input that vector with the corresponding label (for the same video)
+        # ignore the padding!! when setting up the matrices x_train/x_test
+        assert(self.retrain == True)
+        x_train = np.load(xtr_path)
+        y_train = np.load(ytr_path)
+
+        matrix = x_train[0] # matrix for 1st video of training data (7, max_frames)
+
+        self.model_2.fit(x_train, y_train)
+
+        self.model_2.save_weights('new_weights.h5py')
 
 
     def extract_features(self, img_path):
@@ -53,6 +101,6 @@ class Inception_Model:
         x = preprocess_input(x)
 
         # get the prediction
-        features = self.model.predict(x)
+        features = self.model_1.predict(x)
 
         return features[0]

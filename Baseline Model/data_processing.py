@@ -243,6 +243,26 @@ class Dataset:
 
         return empty
 
+    def get_data_for_CNN(self):
+        model = cnn.Inception_Model(True)
+
+
+        video_numbers = self.train['Video']
+
+        matrices = self.get_matrix(video_numbers[0], model)
+        matrices = self.padding(matrices)
+
+        for num in video_numbers[1:]:
+            temp = self.get_matrix(num, model)
+            temp = self.padding(temp)
+            matrices = np.dstack((matrices, temp))
+
+        x_retrain = matrices.reshape(-1, 2048, self.max_frames)
+
+        print("Size of x retraining set: {}".format(x_retrain.shape))
+        np.save('x_retrain.npy', x_retrain)
+
+
     def get_data_for_RNN(self):
         '''
         obtain the training and test data
@@ -250,7 +270,7 @@ class Dataset:
         x_train is a np.array of shape (len(train), 2048, max_frames)
         x_test  is a np.array of shape (len(test),  2048, max_frames)
         '''
-        model = cnn.Inception_Model()
+        model = cnn.Inception_Model(False)
 
         ################################################
 
