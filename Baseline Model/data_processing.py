@@ -50,14 +50,14 @@ class Dataset:
         frames_per_vid_path = os.path.join(data_path, 'framesPerVid.csv')
         frames_per_video = pd.read_csv(frames_per_vid_path)
 
-        for i in range(len(frames_per_video)):
-            self.total_frames += frames_per_video[i]
+        for i in range(len(frames_per_video) - 1):
+            self.total_frames += frames_per_video.at[i, "FramesPerVideo"]
 
         df['FramesPerVideo'] = frames_per_video['FramesPerVideo']
 
         # essentially rename the Translations column as the Label column
         df['Label'] = df['Translations']
-        df['Label'] = df['Label'].astype("string")
+        df['Label'] = df['Label'].astype("str")
         df.drop('Translations', axis = 1, inplace = True)
 
         path_list = [os.path.join(folder, s) for folder, subfolder, _ \
@@ -248,8 +248,8 @@ class Dataset:
 
         return empty
 
-    def get_data_for_CNN(self): #generates matrices for each video where column i is prediction for frame i from frozen model
-        model = cnn.Inception_Model(retrain = True)
+    def get_data_for_CNN(self, num_classes): #generates matrices for each video where column i is prediction for frame i from frozen model
+        model = cnn.Inception_Model(True, num_classes)
 
         video_numbers = self.train['Video']
 

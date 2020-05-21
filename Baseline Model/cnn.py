@@ -40,12 +40,13 @@ class Inception_Model:
         # trainable layers will be trained and weights saved
         base_model = InceptionV3(weights = 'imagenet', include_top = True)
         model_frozen = models.Model(inputs = base_model.input,
-                                  outputs = base_model.get_layer('average_pooling2d_7').output) ##??
+                                  outputs = base_model.get_layer('average_pooling2d_7').output)
 
         model_retrain = models.Model(inputs = base_model.get_layer('conv2d_70').input,
                                   outputs = base_model.get_layer('avg_pool').output)
 
-        #add softmax layer, #neurons =  num_classes
+        # add softmax layer
+        model_retrain.add(layers.Dense(num_classes, activation = 'softmax'))
         return model_frozen, model_retrain
 
     def get_model(self):
