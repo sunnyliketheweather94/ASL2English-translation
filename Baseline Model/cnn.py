@@ -1,7 +1,7 @@
 # used for setting up the CNN
 # based on the code from https://github.com/harvitronix/five-video-classification-methods/blob/master/extractor.py
-import numpy as np 
-import tensorflow as tf 
+import numpy as np
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, models
 from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input
@@ -10,44 +10,47 @@ import cv2
 
 
 class Inception_Model:
-    def __init__(self, retrain, num_classes):
+    def __init__(self, retrain):
         '''
         we set up the InceptionV3 model but end it at the final pool layer
-        so that the features can be extracted from here and then 
+        so that the features can be extracted from here and then
         be inputted into the upcoming LSTM
         '''
-        self.retrain = retrain 
+        self.retrain = retrain
         if retrain:
-            self.model_frozen, self.model_retrain = self.setup_retrain_model(num_classes)
+            self.model_retrain = self.setup_retrain_model()
 
         else:
             self.model = self.setup_model()
 
-    def setup_new_model(self):
+    '''def setup_new_model(self):
         # CNN but with the pretrained + new weights layers
         base_model = InceptionV3(weights = 'imagenet', include_top = True)
-        model = models.Model(inputs = base_model.input, )
+        model = models.Model(inputs = base_model.input, )'''
 
     def setup_model(self):
         base_model = InceptionV3(weights = 'imagenet', include_top = True)
         model = models.Model(inputs = base_model.input,
-                                  outputs = base_model.get_layer('avg_pool').output) 
-                                  
-        return model       
+                                  outputs = base_model.get_layer('avg_pool').output)
+        #base_model.trainable = False?
+        # model.compile?
+        return model
 
-    def setup_retrain_model(self, num_classes):
+    def setup_retrain_model(self):
         # CNN (frozen + trainable layers)
         # trainable layers will be trained and weights saved
         base_model = InceptionV3(weights = 'imagenet', include_top = True)
-        model_frozen = models.Model(inputs = base_model.input,
-                                  outputs = base_model.get_layer('average_pooling2d_7').output)
+        model = models.Model(inputs=base_model.input,
+                             outputs=base_model.get_layer('avg_pool').output)
 
-        model_retrain = models.Model(inputs = base_model.get_layer('conv2d_70').input,
-                                  outputs = base_model.get_layer('avg_pool').output)
+        model.trainable = True
 
-        # add softmax layer
-        model_retrain.add(layers.Dense(num_classes, activation = 'softmax'))
-        return model_frozen, model_retrain
+        fine_tune_at = 250 # Fine-tune from 'average_pooling2d_7' onwards
+        for layer in model.layers[:fine_tune_at]: # Freeze all the layers before the `fine_tune_at` layer
+            layer.trainable = False
+
+        # base_model.compile ?
+        return base_model
 
     def get_model(self):
         '''

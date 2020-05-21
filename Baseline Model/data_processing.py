@@ -8,6 +8,7 @@ from sklearn.utils import shuffle
 import tensorflow.keras.preprocessing as pre 
 from sklearn.model_selection import train_test_split as split 
 import string
+from tensorflow.keras.applications.inception_v3 import preprocess_input
 
 import cnn
 
@@ -253,33 +254,39 @@ class Dataset:
 
         video_numbers = self.train['Video']
 
-        matrices = self.get_matrix(video_numbers[0], model)
-        matrices = self.padding(matrices)
+        #first video
+        frame_paths= self.get_frame_paths(self, video_numbers[0])
+        x_train = self.convert_img_to_matrix(frame_paths[0])
+        for path in frame_paths[1:]:
+            temp = self.convert_img_to_matrix(path)
+            x_train = np.dstack((x_train, temp))
+        #rest of videos
+        for vid in video_numbers[1:]:
+            frame_paths = self.get_frame_paths(self, vid)
+            for path in frame_paths:
+                temp = self.convert_img_to_matrix(path)
+                x_train = np.dstack((x_train, temp))
 
-        for num in video_numbers[1:]:
-            temp = self.get_matrix(num, model)
-            temp = self.padding(temp)
-            matrices = np.dstack((matrices, temp))
-
-        x_retrain = matrices.reshape(-1, 7, self.max_frames)
-
-        print("Size of x retraining set: {}".format(x_retrain.shape))
-        np.save('x_retrain.npy', x_retrain)
+        print("Size of x retraining set: {}".format(x_train.shape))
+        np.save('x_train.npy', x_train)
 
         # ##################################################
 
         # repeat above procedure for x_test
         video_numbers = self.test['Video']
 
-        matrices = self.get_matrix(video_numbers[0], model)
-        matrices = self.padding(matrices)
-
-        for num in video_numbers[1:]:
-            temp = self.get_matrix(num, model)
-            temp = self.padding(temp)
-            matrices = np.dstack((matrices, temp))
-
-        x_test = matrices.reshape(-1, 7, self.max_frames)
+        #first video
+        frame_paths= self.get_frame_paths(self, video_numbers[0])
+        x_test = self.convert_img_to_matrix(frame_paths[0])
+        for path in frame_paths[1:]:
+            temp = self.convert_img_to_matrix(path)
+            x_test = np.dstack((x_test, temp))
+        #rest of videos
+        for vid in video_numbers[1:]:
+            frame_paths = self.get_frame_paths(self, vid)
+            for path in frame_paths:
+                temp = self.convert_img_to_matrix(path)
+                x_test  = np.dstack((x_test, temp))
 
         print("Size of x testing set: {}".format(x_test.shape))
         np.save('x_test.npy', x_test)
@@ -290,16 +297,16 @@ class Dataset:
         # convert the label into its oneHot vector
         # stack up the vectors to get the matrix for y_train
         #y_retrain = np.zeros((len(self.train['Video']), self.num_classes))
-        y_retrain = np.zeros((self.num_classes, self.total_frames))
+        y_train = np.zeros((self.num_classes, self.total_frames))
 
         video_numbers = self.train['Video']
         count = 0
         for num in video_numbers:
             for i in range(count, count + self.get_num_frames(num)):
-                y_retrain[:, i] = self.get_oneHot(num)
+                y_train[:, i] = self.get_oneHot(num)
             count += self.get_num_frames(num)
 
-        np.save('y_retrain.npy', y_retrain)
+        np.save('y_train.npy', y_train)
 
         # repeat the above procedure for y_test
         # if self.num_classes >= self.max_frames:
@@ -320,14 +327,14 @@ class Dataset:
         return None, y_train, None, y_test
 
 
-    def get_data_for_RNN(self):
+    def get_data_for_RNN(self, retrain = False):
         '''
         obtain the training and test data
 
         x_train is a np.array of shape (len(train), 2048, max_frames)
         x_test  is a np.array of shape (len(test),  2048, max_frames)
         '''
-        model = cnn.Inception_Model(False)
+        model = cnn.Inception_Model(retrain)
 
         ################################################
 
@@ -376,30 +383,40 @@ class Dataset:
         # stack up the vectors to get the matrix for y_train
         # if self.num_classes >= self.max_frames:
         #     y_train = np.zeros((self.get_num_classes(), len(self.train['Video'])))
-        y_train = np.zeros((len(self.train['Video']), self.num_classes))
+        y_retrain = np.zeros((self.num_classes, self.total_frames))
 
         video_numbers = self.train['Video']
-        i = 0
+        count = 0
         for num in video_numbers:
-            y_train[i, :] = self.get_oneHot(num)
-            i += 1
+            for i in range(count, count + self.get_num_frames(num)):
+                y_retrain[:, i] = self.get_oneHot(num)
+            count += self.get_num_frames(num)
 
-        np.save('y_train.npy', y_train)
+        np.save('y_retrain.npy', y_retrain)
 
         # repeat the above procedure for y_test
         # if self.num_classes >= self.max_frames:
         #     y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
-        y_test = np.zeros((len(self.test['Video']), self.num_classes))
-        
+        y_test = np.zeros((self.num_classes, self.total_frames))
+
         video_numbers = self.test['Video']
-        i = 0
+        count = 0
         for num in video_numbers:
-            y_test[i, :] = self.get_oneHot(num)
-            i += 1
+            for i in range(count, count + self.get_num_frames(num)):
+                y_test[:, i] = self.get_oneHot(num)
+            count += self.get_num_frames(num)
 
         np.save('y_test.npy', y_test)
 
-        print("Size of y training set: {}".format(y_train.shape))
+        print("Size of y training set: {}".format(y_retrain.shape))
         print("Size of y testing set: {}".format(y_test.shape))
 
-        return None, y_train, None, y_test
+        return None, y_retrain, None, y_test
+
+    def convert_img_to_matrix(self, img_path):
+        img = cv2.imread(img_path)
+        img = cv2.resize(img, (299, 299))
+        x = np.array(img)
+        x = np.expand_dims(x, axis=0)
+        x = preprocess_input(x)
+        return x
