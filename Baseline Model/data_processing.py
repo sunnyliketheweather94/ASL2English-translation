@@ -42,12 +42,17 @@ class Dataset:
         self.train = {}
         self.test = {}
         self.img_shape = (231, 299, 3)
+        self.total_frames = 0
 
         df = pd.read_csv(label_path)
 
         # add the frames_per_video to the dataframe
         frames_per_vid_path = os.path.join(data_path, 'framesPerVid.csv')
         frames_per_video = pd.read_csv(frames_per_vid_path)
+
+        for i in range(len(frames_per_video)):
+            self.total_frames += frames_per_video[i]
+
         df['FramesPerVideo'] = frames_per_video['FramesPerVideo']
 
         # essentially rename the Translations column as the Label column
@@ -219,7 +224,7 @@ class Dataset:
         print("Getting the matrix for video {}".format(num))
         x = []
         paths = self.get_frame_paths(num)
-        temp = np.zeros((2048, self.get_num_frames(num)))
+        temp = np.zeros((7, self.get_num_frames(num)))
         i = 0
 
         for p in paths:
@@ -238,14 +243,13 @@ class Dataset:
 
         assert(cols <= max_frames)
 
-        empty = np.zeros((2048, max_frames))
+        empty = np.zeros((7, max_frames))
         empty[:rows, :cols] = matrix
 
         return empty
 
-    def get_data_for_CNN(self):
-        model = cnn.Inception_Model(True)
-
+    def get_data_for_CNN(self): #generates matrices for each video where column i is prediction for frame i from frozen model
+        model = cnn.Inception_Model(retrain = True)
 
         video_numbers = self.train['Video']
 
@@ -257,10 +261,63 @@ class Dataset:
             temp = self.padding(temp)
             matrices = np.dstack((matrices, temp))
 
-        x_retrain = matrices.reshape(-1, 2048, self.max_frames)
+        x_retrain = matrices.reshape(-1, 7, self.max_frames)
 
         print("Size of x retraining set: {}".format(x_retrain.shape))
         np.save('x_retrain.npy', x_retrain)
+
+        # ##################################################
+
+        # repeat above procedure for x_test
+        video_numbers = self.test['Video']
+
+        matrices = self.get_matrix(video_numbers[0], model)
+        matrices = self.padding(matrices)
+
+        for num in video_numbers[1:]:
+            temp = self.get_matrix(num, model)
+            temp = self.padding(temp)
+            matrices = np.dstack((matrices, temp))
+
+        x_test = matrices.reshape(-1, 7, self.max_frames)
+
+        print("Size of x testing set: {}".format(x_test.shape))
+        np.save('x_test.npy', x_test)
+
+        ##################################################
+
+        # for each video, obtain its true label
+        # convert the label into its oneHot vector
+        # stack up the vectors to get the matrix for y_train
+        #y_retrain = np.zeros((len(self.train['Video']), self.num_classes))
+        y_retrain = np.zeros((self.num_classes, self.total_frames))
+
+        video_numbers = self.train['Video']
+        count = 0
+        for num in video_numbers:
+            for i in range(count, count + self.get_num_frames(num)):
+                y_retrain[:, i] = self.get_oneHot(num)
+            count += self.get_num_frames(num)
+
+        np.save('y_retrain.npy', y_retrain)
+
+        # repeat the above procedure for y_test
+        # if self.num_classes >= self.max_frames:
+        #     y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
+        y_test = np.zeros((len(self.test['Video']), self.num_classes))
+
+        video_numbers = self.test['Video']
+        i = 0
+        for num in video_numbers:
+            y_test[i, :] = self.get_oneHot(num)
+            i += 1
+
+        np.save('y_test.npy', y_test)
+
+        print("Size of y training set: {}".format(y_train.shape))
+        print("Size of y testing set: {}".format(y_test.shape))
+
+        return None, y_train, None, y_test
 
 
     def get_data_for_RNN(self):
@@ -325,6 +382,7 @@ class Dataset:
         i = 0
         for num in video_numbers:
             y_train[i, :] = self.get_oneHot(num)
+            i += 1
 
         np.save('y_train.npy', y_train)
 
@@ -337,6 +395,7 @@ class Dataset:
         i = 0
         for num in video_numbers:
             y_test[i, :] = self.get_oneHot(num)
+            i += 1
 
         np.save('y_test.npy', y_test)
 

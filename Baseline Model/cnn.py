@@ -10,7 +10,7 @@ import cv2
 
 
 class Inception_Model:
-    def __init__(self, retrain):
+    def __init__(self, retrain, num_classes):
         '''
         we set up the InceptionV3 model but end it at the final pool layer
         so that the features can be extracted from here and then 
@@ -18,10 +18,10 @@ class Inception_Model:
         '''
         self.retrain = retrain 
         if retrain:
-            self.model_1, self.model_2 = setup_retrain_model()
+            self.model_frozen, self.model_retrain = self.setup_retrain_model(num_classes)
 
         else:
-            self.model = setup_model()
+            self.model = self.setup_model()
 
     def setup_new_model(self):
         # CNN but with the pretrained + new weights layers
@@ -35,17 +35,18 @@ class Inception_Model:
                                   
         return model       
 
-    def setup_retrain_model(self):
+    def setup_retrain_model(self, num_classes):
         # CNN (frozen + trainable layers)
         # trainable layers will be trained and weights saved
         base_model = InceptionV3(weights = 'imagenet', include_top = True)
-        model_1 = models.Model(inputs = base_model.input,
-                                  outputs = base_model.get_layer('avg_pool_7').output)
+        model_frozen = models.Model(inputs = base_model.input,
+                                  outputs = base_model.get_layer('average_pooling2d_7').output) ##??
 
-        model_2 = models.Model(inputs = base_model.get_layer('conv2d_70').input,
+        model_retrain = models.Model(inputs = base_model.get_layer('conv2d_70').input,
                                   outputs = base_model.get_layer('avg_pool').output)
 
-        return model_1, model_2
+        #add softmax layer, #neurons =  num_classes
+        return model_frozen, model_retrain
 
     def get_model(self):
         '''
@@ -59,9 +60,9 @@ class Inception_Model:
         return self.model
 
 
-    def model_retrain(self):
+    def model_retrain(self, xtr_path, ytr_path):
         # load x_train, y_train, x_test, y_test
-        # input each column of the matrices (for each video) into the input layer of model_2
+        # input each column of the matrices (for each video) into the input layer of model_retrain
         # use the y_train as training labels
         # use the categorical_crossentropy function
         # maybe look into the retraining of Inception-V3??
@@ -75,9 +76,9 @@ class Inception_Model:
 
         matrix = x_train[0] # matrix for 1st video of training data (7, max_frames)
 
-        self.model_2.fit(x_train, y_train)
+        self.model_retrain.fit(x_train, y_train)
 
-        self.model_2.save_weights('new_weights.h5py')
+        self.model_retrain.save_weights('new_weights.h5py')
 
 
     def extract_features(self, img_path):
@@ -101,6 +102,6 @@ class Inception_Model:
         x = preprocess_input(x)
 
         # get the prediction
-        features = self.model_1.predict(x)
+        features = self.model_frozen.predict(x)
 
         return features[0]
