@@ -249,20 +249,21 @@ class Dataset:
 
         return empty
 
-    def get_data_for_CNN(self, num_classes): #generates matrices for each video where column i is prediction for frame i from frozen model
-        model = cnn.Inception_Model(True, num_classes)
+    def get_data_for_CNN(self):
 
         video_numbers = self.train['Video']
 
         #first video
-        frame_paths= self.get_frame_paths(self, video_numbers[0])
+        print("Working on video ", video_numbers[0])
+        frame_paths= self.get_frame_paths(video_numbers[0])
         x_train = self.convert_img_to_matrix(frame_paths[0])
         for path in frame_paths[1:]:
             temp = self.convert_img_to_matrix(path)
             x_train = np.dstack((x_train, temp))
         #rest of videos
         for vid in video_numbers[1:]:
-            frame_paths = self.get_frame_paths(self, vid)
+            print("Working on video ", vid)
+            frame_paths = self.get_frame_paths(vid)
             for path in frame_paths:
                 temp = self.convert_img_to_matrix(path)
                 x_train = np.dstack((x_train, temp))
@@ -276,14 +277,16 @@ class Dataset:
         video_numbers = self.test['Video']
 
         #first video
-        frame_paths= self.get_frame_paths(self, video_numbers[0])
+        print("Working on video ", video_numbers[0])
+        frame_paths= self.get_frame_paths(video_numbers[0])
         x_test = self.convert_img_to_matrix(frame_paths[0])
         for path in frame_paths[1:]:
             temp = self.convert_img_to_matrix(path)
             x_test = np.dstack((x_test, temp))
         #rest of videos
         for vid in video_numbers[1:]:
-            frame_paths = self.get_frame_paths(self, vid)
+            print("Working on video ", vid)
+            frame_paths = self.get_frame_paths(vid)
             for path in frame_paths:
                 temp = self.convert_img_to_matrix(path)
                 x_test  = np.dstack((x_test, temp))
