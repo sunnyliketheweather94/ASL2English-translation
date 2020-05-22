@@ -10,8 +10,8 @@ import data_processing
 #labels_path = os.path.join('/Users/teresanoyola/Desktop/CS230/Project/ASL-English-translation/Baseline Model', 'labels.csv') # CHANGE THIS
 #data_path = '/Users/teresanoyola/Desktop/CS230/Project/Processed Data/' # CHANGE THIS
 #Google Drive
-labels_path = os.path.join('/content/drive/CS230/Data', 'labels.csv') # CHANGE THIS
-data_path = '/content/drive/CS230/Data/Processed Data' # CHANGE THIS
+labels_path = os.path.join('/content/gdrive/CS230/Data', 'labels.csv') # CHANGE THIS
+data_path = '/content/gdrive/CS230/Data/Processed Data' # CHANGE THIS
 
 data = data_processing.Dataset(data_path, labels_path)
 data.get_data_for_CNN()
