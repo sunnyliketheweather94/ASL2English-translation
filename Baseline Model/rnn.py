@@ -2,8 +2,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, models
-import data_processing
-import matplotlib.pyplot as plt 
+#import data_processing
+import matplotlib.pyplot as plt
 
 class RNN_model:
     def __init__(self, data, input_size, frames):
@@ -43,7 +43,7 @@ class RNN_model:
 
 def train_test_RNN(data, xtr_path, ytr_path, xts_path, yts_path):
     '''
-    we obain the train and test data, set up the RNN 
+    we obain the train and test data, set up the RNN
     we then train the RNN on the train data and evaluate it on the test data
     we then plot the accuracies and losses for the train/test data over epoch
     '''
@@ -75,5 +75,3 @@ def train_test_RNN(data, xtr_path, ytr_path, xts_path, yts_path):
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.show()
-
-

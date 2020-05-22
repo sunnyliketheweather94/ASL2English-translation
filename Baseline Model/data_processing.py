@@ -1,18 +1,19 @@
 # used for processing the data
 import numpy as np
-import pandas as pd 
+import pandas as pd
 import glob
 import os
 import cv2
 from sklearn.utils import shuffle
-import tensorflow.keras.preprocessing as pre 
-from sklearn.model_selection import train_test_split as split 
+import tensorflow.keras.preprocessing as pre
+from sklearn.model_selection import train_test_split as split
 import string
 from tensorflow.keras.applications.inception_v3 import preprocess_input
 
-import cnn
+# import cnn
 
 pd.set_option('display.max_colwidth', 100)
+
 
 # assume that we have labels already processed.
 # labels are stored in 'labels.csv' where the first column is the video number
@@ -25,19 +26,20 @@ class Dataset:
         file_names: a list of the file names of the videos
         frame_paths: a list of paths to frames for videos in the data
         labels: a list of the true labels
-        df: the original dataframe containing all the information (in the original order) 
+        df: the original dataframe containing all the information (in the original order)
 
         they're all stored in a dictionary with the keys being train, dev
-        and test, respectively. 
+        and test, respectively.
 
         for example, if you require the train_labels, you'd do:
                 data = Dataset(path)
                 test = data.getTestData() # a dictionary
                 test_labels = test['labels']
     '''
+
     def __init__(self, data_path, label_path):
         '''
-        data_path: the path to the processed data 
+        data_path: the path to the processed data
         label_path: the path to the processed label csv file
         '''
         self.train = {}
@@ -59,10 +61,10 @@ class Dataset:
         # essentially rename the Translations column as the Label column
         df['Label'] = df['Translations']
         df['Label'] = df['Label'].astype("str")
-        df.drop('Translations', axis = 1, inplace = True)
+        df.drop('Translations', axis=1, inplace=True)
 
         path_list = [os.path.join(folder, s) for folder, subfolder, _ \
-                                in os.walk(data_path) for s in sorted(subfolder)]
+                     in os.walk(data_path) for s in sorted(subfolder)]
 
         # obtain the paths for all the frames in the correct order
         # and then append them to a list for a given video
@@ -70,13 +72,13 @@ class Dataset:
         # all the frame paths (in order) for all the videos
         frame_paths = []
         for path in path_list:
-            video_num = int(path.split('/')[-1]) # get the video number of current video
+            video_num = int(path.split('/')[-1])  # get the video number of current video
 
             paths = []
             for filepath in glob.glob(path + '/*.jpg'):
-                paths.append(filepath) # store the paths of all the frames in the subdirectory
+                paths.append(filepath)  # store the paths of all the frames in the subdirectory
 
-            paths.sort(key = lambda x : x.split('_')[1])
+            paths.sort(key=lambda x: x.split('_')[1])
             frame_paths.append(paths)
 
         df['frame_paths'] = frame_paths
@@ -87,8 +89,8 @@ class Dataset:
         self.df = df
         df = shuffle(df)
 
-        train = df[:-25] # :152
-        test = df[-25:] # 181:
+        train = df[:-25]  # :152
+        test = df[-25:]  # 181:
 
         print("Train data: {}".format(len(train)))
         print("Test data: {}".format(len(test)))
@@ -103,14 +105,14 @@ class Dataset:
         table["\n"] = None
 
         # create a dictionary of all the words in the labels
-        # the value for each word is going to be its index in the oneHot encoding 
+        # the value for each word is going to be its index in the oneHot encoding
         label_dict = {}
         i = 0
         for sentence in df['Label']:
             for word in sentence.split():
                 # convert the word into lowercase and remove all punctuations
                 word = word.lower()
-                word = word.translate(table) 
+                word = word.translate(table)
 
                 # if the word doesn't exist in the dictionary already..
                 # add it and increment the counter
@@ -121,14 +123,13 @@ class Dataset:
         self.labels_dictionary = label_dict
         self.num_classes = i + 1
 
-
         # self.print_dictionary()
 
     def get_trainData(self):
-        return self.train 
+        return self.train
 
     def get_testData(self):
-        return self.test 
+        return self.test
 
     def get_data(self):
         return self.train, self.test
@@ -138,7 +139,7 @@ class Dataset:
         obtain the number of frames for a given video
         '''
         # get the row corresponding to this video
-        data = self.df.loc[self.df['Video'] == video_number] 
+        data = self.df.loc[self.df['Video'] == video_number]
         return np.squeeze(data['FramesPerVideo'].to_numpy())
 
     def get_frame_paths(self, video_number):
@@ -152,20 +153,20 @@ class Dataset:
 
     def print_label(self, video_number):
         # get the row corresponding to this video
-        data = self.df.loc[self.df['Video'] == video_number] 
+        data = self.df.loc[self.df['Video'] == video_number]
 
-        print("The true label is: \"{}\"".\
-                            format((data['Label']).to_string(index=False)))
+        print("The true label is: \"{}\"". \
+              format((data['Label']).to_string(index=False)))
 
     def get_label(self, video_number):
         '''
         obtain the true label for a given video
         '''
         # get the row corresponding to this video
-        data = self.df.loc[self.df['Video'] == video_number] 
+        data = self.df.loc[self.df['Video'] == video_number]
         # print(data['Label'])
         label = (data['Label']).to_string(index=False)
-        
+
         table = str.maketrans('', '', string.punctuation)
         table["\n"] = None
 
@@ -242,7 +243,7 @@ class Dataset:
         max_frames = self.max_frames
         rows, cols = matrix.shape
 
-        assert(cols <= max_frames)
+        assert (cols <= max_frames)
 
         empty = np.zeros((7, max_frames))
         empty[:rows, :cols] = matrix
@@ -253,20 +254,22 @@ class Dataset:
 
         video_numbers = self.train['Video']
 
-        #first video
+        # first video
         print("Working on video ", video_numbers[0])
-        frame_paths= self.get_frame_paths(video_numbers[0])
+        # print(self.get_num_frames(video_numbers[0]))
+        frame_paths = self.get_frame_paths(video_numbers[0])
         x_train = self.convert_img_to_matrix(frame_paths[0])
         for path in frame_paths[1:]:
             temp = self.convert_img_to_matrix(path)
-            x_train = np.dstack((x_train, temp))
-        #rest of videos
+            x_train = np.concatenate((x_train, temp), axis=0)
+        # rest of videos
         for vid in video_numbers[1:]:
             print("Working on video ", vid)
+            # print(self.get_num_frames(vid))
             frame_paths = self.get_frame_paths(vid)
             for path in frame_paths:
                 temp = self.convert_img_to_matrix(path)
-                x_train = np.dstack((x_train, temp))
+                x_train = np.concatenate((x_train, temp), axis=0)
 
         print("Size of x retraining set: {}".format(x_train.shape))
         np.save('x_train.npy', x_train)
@@ -276,20 +279,20 @@ class Dataset:
         # repeat above procedure for x_test
         video_numbers = self.test['Video']
 
-        #first video
+        # first video
         print("Working on video ", video_numbers[0])
-        frame_paths= self.get_frame_paths(video_numbers[0])
+        frame_paths = self.get_frame_paths(video_numbers[0])
         x_test = self.convert_img_to_matrix(frame_paths[0])
         for path in frame_paths[1:]:
             temp = self.convert_img_to_matrix(path)
-            x_test = np.dstack((x_test, temp))
-        #rest of videos
+            x_test = np.concatenate((x_test, temp), axis=0)
+        # rest of videos
         for vid in video_numbers[1:]:
             print("Working on video ", vid)
             frame_paths = self.get_frame_paths(vid)
             for path in frame_paths:
                 temp = self.convert_img_to_matrix(path)
-                x_test  = np.dstack((x_test, temp))
+                x_test = np.concatenate((x_test, temp), axis=0)
 
         print("Size of x testing set: {}".format(x_test.shape))
         np.save('x_test.npy', x_test)
@@ -299,38 +302,48 @@ class Dataset:
         # for each video, obtain its true label
         # convert the label into its oneHot vector
         # stack up the vectors to get the matrix for y_train
-        #y_retrain = np.zeros((len(self.train['Video']), self.num_classes))
-        y_train = np.zeros((self.num_classes, self.total_frames))
+        # y_retrain = np.zeros((len(self.train['Video']), self.num_classes))
 
+        total_frames_train = 0
         video_numbers = self.train['Video']
+        for vid in video_numbers:
+            total_frames_train += self.get_num_frames(vid)
+
+        y_train = np.zeros((self.num_classes, total_frames_train))
+
         count = 0
         for num in video_numbers:
             for i in range(count, count + self.get_num_frames(num)):
                 y_train[:, i] = self.get_oneHot(num)
             count += self.get_num_frames(num)
 
+        print("Size of y training set: {}".format(y_train.shape))
         np.save('y_train.npy', y_train)
 
         # repeat the above procedure for y_test
         # if self.num_classes >= self.max_frames:
         #     y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
-        y_test = np.zeros((len(self.test['Video']), self.num_classes))
+
+        total_frames_test = 0
+        video_numbers = self.test['Video']
+        for vid in video_numbers:
+            total_frames_test += self.get_num_frames(vid)
+
+        y_test = np.zeros((self.num_classes, total_frames_test))
 
         video_numbers = self.test['Video']
         i = 0
         for num in video_numbers:
-            y_test[i, :] = self.get_oneHot(num)
+            y_test[:, i] = self.get_oneHot(num)
             i += 1
 
         np.save('y_test.npy', y_test)
 
-        print("Size of y training set: {}".format(y_train.shape))
         print("Size of y testing set: {}".format(y_test.shape))
 
         return None, y_train, None, y_test
 
-
-    def get_data_for_RNN(self, retrain = False):
+    def get_data_for_RNN(self, retrain=False):
         '''
         obtain the training and test data
 
