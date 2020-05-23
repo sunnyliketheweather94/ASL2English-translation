@@ -255,17 +255,16 @@ class Dataset:
         video_numbers = self.train['Video']
 
         # first video
-        print("Working on video ", video_numbers[0])
-        # print(self.get_num_frames(video_numbers[0]))
+        print("Working on video", video_numbers[0])
         frame_paths = self.get_frame_paths(video_numbers[0])
         x_train = self.convert_img_to_matrix(frame_paths[0])
         for path in frame_paths[1:]:
             temp = self.convert_img_to_matrix(path)
             x_train = np.concatenate((x_train, temp), axis=0)
+
         # rest of videos
         for vid in video_numbers[1:]:
-            print("Working on video ", vid)
-            # print(self.get_num_frames(vid))
+            print("Working on video", vid)
             frame_paths = self.get_frame_paths(vid)
             for path in frame_paths:
                 temp = self.convert_img_to_matrix(path)
@@ -273,6 +272,8 @@ class Dataset:
 
         print("Size of x retraining set: {}".format(x_train.shape))
         np.save('x_train.npy', x_train)
+
+        print("--------------------- Done with training data ---------------------")
 
         # ##################################################
 
@@ -286,6 +287,7 @@ class Dataset:
         for path in frame_paths[1:]:
             temp = self.convert_img_to_matrix(path)
             x_test = np.concatenate((x_test, temp), axis=0)
+
         # rest of videos
         for vid in video_numbers[1:]:
             print("Working on video ", vid)
@@ -297,13 +299,14 @@ class Dataset:
         print("Size of x testing set: {}".format(x_test.shape))
         np.save('x_test.npy', x_test)
 
+        print("--------------------- Done with test data ---------------------")
+
         ##################################################
 
         # for each video, obtain its true label
         # convert the label into its oneHot vector
         # stack up the vectors to get the matrix for y_train
         # y_retrain = np.zeros((len(self.train['Video']), self.num_classes))
-
         total_frames_train = 0
         video_numbers = self.train['Video']
         for vid in video_numbers:
@@ -321,17 +324,14 @@ class Dataset:
         np.save('y_train.npy', y_train)
 
         # repeat the above procedure for y_test
-        # if self.num_classes >= self.max_frames:
-        #     y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
-
         total_frames_test = 0
         video_numbers = self.test['Video']
+
         for vid in video_numbers:
             total_frames_test += self.get_num_frames(vid)
 
         y_test = np.zeros((self.num_classes, total_frames_test))
 
-        video_numbers = self.test['Video']
         i = 0
         for num in video_numbers:
             y_test[:, i] = self.get_oneHot(num)
@@ -343,7 +343,7 @@ class Dataset:
 
         return None, y_train, None, y_test
 
-    def get_data_for_RNN(self, retrain=False):
+    def get_data_for_RNN(self, retrain = False):
         '''
         obtain the training and test data
 
@@ -397,8 +397,6 @@ class Dataset:
         # for each video, obtain its true label
         # convert the label into its oneHot vector
         # stack up the vectors to get the matrix for y_train
-        # if self.num_classes >= self.max_frames:
-        #     y_train = np.zeros((self.get_num_classes(), len(self.train['Video'])))
         y_retrain = np.zeros((self.num_classes, self.total_frames))
 
         video_numbers = self.train['Video']
@@ -411,8 +409,6 @@ class Dataset:
         np.save('y_retrain.npy', y_retrain)
 
         # repeat the above procedure for y_test
-        # if self.num_classes >= self.max_frames:
-        #     y_test = np.zeros((self.get_num_classes(), len(self.test['Video'])))
         y_test = np.zeros((self.num_classes, self.total_frames))
 
         video_numbers = self.test['Video']
@@ -430,9 +426,34 @@ class Dataset:
         return None, y_retrain, None, y_test
 
     def convert_img_to_matrix(self, img_path):
+        '''
+        obtains the matrix of size (299, 299, 3) for each image
+        '''
         img = cv2.imread(img_path)
         img = cv2.resize(img, (299, 299))
         x = np.array(img)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
         return x
+
+
+    def concatenate_matrices(self, type_, order):
+        '''
+        concatenates all the matrices, one after the other, and then 
+        saves them all together.
+        '''
+        data_dir = os.path.join(os.getcwd(), type_)
+        
+        files_paths = [os.path.join(data_dir, x) for x in order]
+        matrices = np.load(files_paths[0])
+        print(files_paths[0])
+        for p in files_paths[1:]:
+            matrix = np.load(p)
+            print(p)
+            matrices = np.concatenate((matrices, matrix))
+        
+        name = "x" + type_ + ".npy"
+        np.save(name, matrices)
+        print("Done saving the matrix. Its shape is {}.".format(matrices.shape))
+
+
