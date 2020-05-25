@@ -13,7 +13,6 @@ pd.set_option('display.max_colwidth', 100)
 class Dataset:
     def __init__(self, data_path, labels_path):
         self.total_frames = 0
-        self.img_size = (114, 125, 150, 3)
         self.train = {}
         self.test = {}
 
@@ -78,11 +77,16 @@ class Dataset:
         self.Int2Words = {c : i for i, c in self.Words2Int.items()}
         self.num_classes = len(self.Words2Int)
 
+        self.img_size = (self.min_frames, 125, 150, 3)
+
     def get_frame_paths(self, video_number):
         row = self.data.loc[self.data['Video'] == video_number]
         paths = [i for p in row['FramePaths'] for i in p]
 
         return paths
+
+    def get_image_size(self):
+        return self.img_size
 
     def get_num_frames(self, video_number):
         row = self.data.loc[self.data['Video'] == video_number]
@@ -133,7 +137,6 @@ class Dataset:
         img = cv2.resize(img, (150, 125))
         x = np.array(img)
         x = np.expand_dims(x, axis=0)
-        # x = preprocess_input(x)
 
         return x
 
@@ -160,7 +163,7 @@ class Dataset:
         video_numbers = data['Video']
         
         counter = 1
-        x = np.zeros((len(data), 114, 125, 150, 3))
+        x = np.zeros((len(data), self.min_frames, 125, 150, 3))
         for i, vid_num in enumerate(video_numbers):
             counter += 1
             temp = self.get_matrices(vid_num, counter)
