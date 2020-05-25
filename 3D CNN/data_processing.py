@@ -1,0 +1,182 @@
+import numpy as np 
+import pandas as pd
+from matplotlib import pyplot as plt
+import os
+import cv2
+import glob
+from sklearn.utils import shuffle
+import tensorflow.keras.preprocessing as tf_pre 
+import string
+
+pd.set_option('display.max_colwidth', 100)
+
+class Dataset:
+    def __init__(self, data_path, labels_path):
+        self.total_frames = 0
+        self.img_size = (114, 125, 150, 3)
+        self.train = {}
+        self.test = {}
+
+        df = pd.read_csv(labels_path)
+
+        FramesPerVideoPath = os.path.join(data_path, 'FramesPerVideo.csv')
+        FramesPerVideo = pd.read_csv(FramesPerVideoPath)
+
+        df['FramesPerVideo'] = FramesPerVideo['Frames']
+        df['Label'] = df['Label'].astype("str")
+
+        for item in df['FramesPerVideo'].values:
+            self.total_frames += item
+
+        paths = [os.path.join(folder, s) for folder, subfolder, _ \
+                 in os.walk(data_path) for s in sorted(subfolder)]
+
+        # stores all the paths to frames for a given video
+        frame_paths = []
+        for path in paths:
+            video_number = int(path.split('/')[-1][6:])
+
+            path_list = []
+            for filepath in glob.glob(path + "/*.jpg"):
+                path_list.append(filepath)
+        
+            path_list.sort(key = lambda x : x.split('_')[1])
+            frame_paths.append(path_list)
+
+        df['FramePaths'] = frame_paths
+
+        self.max_frames = np.max([i for i in df['FramesPerVideo']])
+        self.min_frames = np.min([i for i in df['FramesPerVideo']])
+
+        shuffled = shuffle(df)
+        self.data = shuffled
+
+        self.train = shuffled[:-int(len(df) * 0.2)]
+        self.test = shuffled[-int(len(df) * 0.2):]
+
+        print("Train data: {}".format(len(self.train)))
+        print("Test data: {}".format(len(self.test)))
+
+        # for column, data in train.iteritems():
+        #     self.train[column] = data.values
+
+        # for column, data in test.iteritems():
+        #     self.test[column] = data.values
+
+        # create a dictionary of all the words in the labels
+        # the value for each word is going to be its index in the oneHot encoding
+        label_dict = {}
+        i = 0
+        for word in shuffled['Label']:
+            # if the word doesn't exist in the dictionary already..
+            # add it and increment the counter
+            if word not in label_dict.keys():
+                label_dict[word] = i
+                i += 1
+
+        self.Words2Int = label_dict
+        self.Int2Words = {c : i for i, c in self.Words2Int.items()}
+        self.num_classes = len(self.Words2Int)
+
+    def get_frame_paths(self, video_number):
+        row = self.data.loc[self.data['Video'] == video_number]
+        paths = [i for p in row['FramePaths'] for i in p]
+
+        return paths
+
+    def get_num_frames(self, video_number):
+        row = self.data.loc[self.data['Video'] == video_number]
+        return np.squeeze(data['FramesPerVideo'].to_numpy())
+
+    def get_label(self, video_number):
+        '''
+        obtain the true label for a given video
+        '''
+        # get the row corresponding to this video
+        data_ = self.data.loc[self.data['Video'] == video_number]
+        label = (data_['Label']).to_string(index=False)
+
+        return label[1:]
+
+    def print_dictionary(self):
+        '''
+        print the contents of the dictionary
+        '''
+        for k, v in self.Words2Int.items():
+            print("{}: {}".format(v, k))
+
+    def get_num_classes(self):
+        '''
+        obtain the maximum number of words available in the dictionary
+        '''
+        return self.num_classes
+
+    def get_max_frames(self):
+        '''
+        obtain the maximum number of frames amongst all the videos in the dataset
+        '''
+        return self.max_frames
+
+    def get_min_frames(self):
+        '''
+        obtain the maximum number of frames amongst all the videos in the dataset
+        '''
+        return self.min_frames
+
+    def get_oneHotIndex(self, video_number):
+        label = self.get_label(video_number)
+
+        return self.Words2Int[label]
+
+    def get_matrix(self, frame_path):
+        img = cv2.imread(frame_path)
+        img = cv2.resize(img, (150, 125))
+        x = np.array(img)
+        x = np.expand_dims(x, axis=0)
+        # x = preprocess_input(x)
+
+        return x
+
+    def get_matrices(self, video_number, counter):
+        frame_paths = self.get_frame_paths(video_number)
+
+        matrices = self.get_matrix(frame_paths[0])
+        for p in frame_paths[1 : self.min_frames]:
+            temp = self.get_matrix(p)
+            matrices = np.concatenate((matrices, temp))
+
+        print("{}. Size for video {} is {}.".format(counter, video_number, matrices.shape))
+
+        return matrices
+
+    def get_data(self, type_):
+        if type_ == 'train':
+            data = self.train
+        
+        else:
+            data = self.test
+
+
+        video_numbers = data['Video']
+        
+        counter = 1
+        x = np.zeros((len(data), 114, 125, 150, 3))
+        for i, vid_num in enumerate(video_numbers):
+            counter += 1
+            temp = self.get_matrices(vid_num, counter)
+            x[i, :, :, :, :] = temp
+            
+        print("the total size of x is {}".format(x.shape))
+
+        y = np.zeros((self.num_classes, len(data)))
+        print(y.shape)
+
+        for i, vid_num in enumerate(video_numbers):
+            idx = self.get_oneHotIndex(vid_num)
+            y[idx, i] = 1
+
+        print("the total size of y is {}".format(y.shape))
+
+        return x, y
+
+
