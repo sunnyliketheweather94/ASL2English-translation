@@ -40,12 +40,12 @@ class ConvNet:
 
 
     def summary(self):
-        print(self.model.summary)
+        self.model.summary()
 
     def get_model(self):
         return self.model
 
-    def train(self, train_paths, test_paths, num_epochs = 50, batch = 16):
+    def train(self, train_paths, test_paths, num_epochs = 15, batch = 64):
         xtr_path, ytr_path = train_paths
         xts_path, yts_path = test_paths
 

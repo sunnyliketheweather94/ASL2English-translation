@@ -22,7 +22,7 @@ def FrameCapture(path):
     while success:                      # vidObj object calls read 
         success, image = vidObj.read()  # function extract frames 
         if success:
-            image = image[:320, 87:232] # image is of shape (320, 145, 3)
+            image = image[:320, 82:232] # image is of shape (320, 150, 3)
             cv2.imwrite("frame_%d.jpg" % count, image) # Saves the frames with frame-counts
             count += 1
 

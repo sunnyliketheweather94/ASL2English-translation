@@ -56,12 +56,6 @@ class Dataset:
         print("Train data: {}".format(len(self.train)))
         print("Test data: {}".format(len(self.test)))
 
-        # for column, data in train.iteritems():
-        #     self.train[column] = data.values
-
-        # for column, data in test.iteritems():
-        #     self.test[column] = data.values
-
         # create a dictionary of all the words in the labels
         # the value for each word is going to be its index in the oneHot encoding
         label_dict = {}
@@ -134,7 +128,7 @@ class Dataset:
 
     def get_matrix(self, frame_path):
         img = cv2.imread(frame_path)
-        img = cv2.resize(img, (150, 125))
+        img = cv2.resize(img, (60, 50))
         x = np.array(img)
         x = np.expand_dims(x, axis=0)
 
@@ -143,10 +137,10 @@ class Dataset:
     def get_matrices(self, video_number, counter):
         frame_paths = self.get_frame_paths(video_number)
 
-        matrices = self.get_matrix(frame_paths[0])
-        for p in frame_paths[1 : self.min_frames]:
-            temp = self.get_matrix(p)
-            matrices = np.concatenate((matrices, temp))
+        matrices = np.zeros((self.max_frames, 50, 60, 3))
+
+        for i, p in enumerate(frame_paths):
+            matrices[i, :, :, :] = self.get_matrix(p)
 
         print("{}. Size for video {} is {}.".format(counter, video_number, matrices.shape))
 
@@ -163,11 +157,10 @@ class Dataset:
         video_numbers = data['Video']
         
         counter = 1
-        x = np.zeros((len(data), self.min_frames, 125, 150, 3))
+        x = np.zeros((len(data), self.max_frames, 50, 60, 3))
         for i, vid_num in enumerate(video_numbers):
             counter += 1
-            temp = self.get_matrices(vid_num, counter)
-            x[i, :, :, :, :] = temp
+            x[i, :, :, :, :] = self.get_matrices(vid_num, counter)
             
         print("the total size of x is {}".format(x.shape))
 
