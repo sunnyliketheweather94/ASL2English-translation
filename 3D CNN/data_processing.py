@@ -71,7 +71,7 @@ class Dataset:
         self.Int2Words = {c : i for i, c in self.Words2Int.items()}
         self.num_classes = len(self.Words2Int)
 
-        self.img_size = (self.min_frames, 125, 150, 3)
+        self.img_size = (self.max_frames, 125, 150, 3)
 
     def get_frame_paths(self, video_number):
         row = self.data.loc[self.data['Video'] == video_number]
