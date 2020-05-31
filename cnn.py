@@ -58,6 +58,8 @@ class ConvNet:
 
         return model
 
+
+
     def get_model2(self):
         # deeper
         model = models.Sequential()
@@ -99,6 +101,8 @@ class ConvNet:
 
         return model
 
+
+
     def get_model3(self):
         # wider
         model = models.Sequential()
@@ -119,7 +123,9 @@ class ConvNet:
 
         return model
 
-    def train(self, train_paths, test_paths, num_epochs = 20, batch = 4):
+
+
+    def train(self, train_paths, test_paths, num_epochs = 20, batch = 4, lr = 0.0001):
         xtr_path, ytr_path = train_paths
         xts_path, yts_path = test_paths
 
@@ -129,7 +135,7 @@ class ConvNet:
         x_test = np.load(xts_path)
         y_test = np.load(yts_path)
 
-        opt = optimizers.Adam(learning_rate = 0.00001, beta_1 = 0.95, beta_2 = 0.98)
+        opt = optimizers.Adam(learning_rate = lr, beta_1 = 0.95, beta_2 = 0.98)
         # opt = optimizers.SGD(learning_rate = 0.0001)
         self.model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
         self.history = self.model.fit(x_train, y_train.T, epochs = num_epochs, batch_size = batch)
@@ -139,6 +145,10 @@ class ConvNet:
 
         self.plot_accuracy()
         self.plot_loss()
+
+        return train_eval
+
+
 
     def plot_accuracy(self, save = True):
         hist = self.history 
@@ -169,3 +179,71 @@ class ConvNet:
 
         else:
             plt.savefig('loss.png')
+
+    def vary_AdamLR(self, xtr_path, ytr_path, xts_path, yts_path):
+        x_train, y_train = np.load(xtr_path), np.load(ytr_path)
+        x_test, y_test = np.load(xts_path, yts_path)
+
+        model = self.get_model()
+
+        rates = np.linspace(1.e-6, 1.e-2, 20)
+        accuracies = []
+        losses = []
+
+        for r in rates:
+            opt = optimizers.Adam(learning_rate = r)
+            model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
+            history = model.fit(x_train, y_train.T, epochs = 10, batch_size = 8)
+
+            train_eval = model.evaluate(x_train, y_train.T)
+            accuracies.append(history.hist['accuracy'])
+            losses.append(history.hist['loss'])
+
+        plot('Adam', rates, losses, accuracies)
+
+
+
+    def vary_SGDLR(self, xtr_path, ytr_path, xts_path, yts_path):
+        x_train, y_train = np.load(xtr_path), np.load(ytr_path)
+        x_test, y_test = np.load(xts_path, yts_path)
+
+        model = self.get_model()
+
+        rates = np.linspace(1.e-6, 1.e-2, 20)
+        accuracies = []
+
+        for r in rates:
+            opt = optimizers.SGD(learning_rate = r)
+            model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
+            history = model.fit(x_train, y_train.T, epochs = 10, batch_size = 8)
+
+            train_eval = model.evaluate(x_train, y_train.T)
+            accuracies.append(history.hist['accuracy'])
+
+        plot('SGD', rates, losses, accuracies)
+
+
+
+
+
+def plot(opt, rates, losses, accuracies):
+    for i in range(len(rates)):
+        plt.plot(rates[i], accuracies[i], label = f'$r$ = {rates[i]:.3f}')
+
+    plt.xlabel('Learning rates')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.title('Accuracy versus Learning Rate')
+    file_name = 'accuracy_' + opt + '.png'
+    plt.savefig(file_name)
+
+    for i in range(len(rates)):
+        plt.plot(rates[i], losses[i], label = f'$r$ = {rates[i]:.3f}')
+
+    plt.xlabel('Learning rates')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.title('Loss versus Learning Rate')
+    file_name = 'loss_' + opt + '.png'
+    plt.savefig(file_name)
+
