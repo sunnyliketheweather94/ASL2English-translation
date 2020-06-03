@@ -37,7 +37,7 @@ class ConvNet:
         # "regular"
         model = models.Sequential()
 
-        model.add(Conv3D(16, kernel_size = (5, 5, 5), input_shape = self.shape))
+        model.add(Conv3D(16, kernel_size = (5, 5, 5), input_shape = self.img_shape))
         model.add(Activation('relu'))
         model.add(BatchNormalization())
         model.add(MaxPooling3D(pool_size = (5, 5, 5)))
@@ -186,14 +186,14 @@ class ConvNet:
 
         model = self.get_model()
 
-        rates = np.linspace(1.e-6, 1.e-2, 20)
+        rates = np.linspace(1.e-6, 1.e-2, 8)
         accuracies = []
         losses = []
 
         for r in rates:
             opt = optimizers.Adam(learning_rate = r)
             model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
-            history = model.fit(x_train, y_train.T, epochs = 10, batch_size = 8)
+            history = model.fit(x_train, y_train.T, epochs = 6, batch_size = 8)
 
             train_eval = model.evaluate(x_train, y_train.T)
             accuracies.append(history.hist['accuracy'])
@@ -209,13 +209,13 @@ class ConvNet:
 
         model = self.get_model()
 
-        rates = np.linspace(1.e-6, 1.e-2, 20)
+        rates = np.linspace(1.e-6, 1.e-2, 8)
         accuracies = []
 
         for r in rates:
             opt = optimizers.SGD(learning_rate = r)
             model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
-            history = model.fit(x_train, y_train.T, epochs = 10, batch_size = 8)
+            history = model.fit(x_train, y_train.T, epochs = 6, batch_size = 8)
 
             train_eval = model.evaluate(x_train, y_train.T)
             accuracies.append(history.hist['accuracy'])
