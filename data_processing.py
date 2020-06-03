@@ -28,7 +28,7 @@ class Dataset:
             self.total_frames += item
 
         paths = [os.path.join(folder, s) for folder, subfolder, _ \
-                 in os.walk(data_path) for s in sorted(subfolder)]
+                 in os.walk(data_path) for s in sorted(subfolder) if "video" in s]
 
         # stores all the paths to frames for a given video
         frame_paths = []
