@@ -15,7 +15,19 @@ class CRNN:
         self.input_shape = input_shape
         self.num_classes = num_classes
 
-    def build_model(self, num_classes, image_width=None, channels=1):
+        if model_num == 1:
+            model = self.get_model1(self, input_shape, num_classes)
+
+        # elif model_num == 2:
+        #     model = self.get_model2()
+        #
+        # elif model_num == 3:
+        #     model = self.get_model3()
+
+
+        self.model = model
+
+    def get_model1(self, input_shape, num_classes):
         """
         build CNN-RNN model
         """
@@ -85,8 +97,12 @@ class CRNN:
         self.model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
         self.history = self.model.fit(x_train, y_train.T, epochs=num_epochs, batch_size=batch)
 
-        # test_eval = self.model.evaluate(x_test, y_test.T)
-        # print("Test evaluation:\nLoss = {}\nAccuracy = {}".format(test_eval[0], test_eval[1]))
+        train_eval = self.model.evaluate(x_test, y_test.T)
+        print("Test evaluation:\nLoss = {}\nAccuracy = {}".format(train_eval[0], train_eval[1]))
+
+        #test_eval = self.model.evaluate(x_test, y_test.T)
+        #print("Test evaluation:\nLoss = {}\nAccuracy = {}".format(test_eval[0], test_eval[1]))
+
 
         self.plot_accuracy()
         self.plot_loss()
