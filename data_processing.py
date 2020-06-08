@@ -22,11 +22,13 @@ class Dataset:
         FramesPerVideo = pd.read_csv(FramesPerVideoPath)
 
         df['FramesPerVideo'] = FramesPerVideo['Frames']
+        df['FramesPerVideo'] = df['FramesPerVideo'].astype(str).astype(int)
         df['Label'] = df['Label'].astype("str")
 
         for item in df['FramesPerVideo'].values:
             self.total_frames += item
 
+        #print(df['FramesPerVideo'].to_numpy())
         paths = [os.path.join(folder, s) for folder, subfolder, _ \
                  in os.walk(data_path) for s in sorted(subfolder) if "video" in s]
 
@@ -52,6 +54,15 @@ class Dataset:
 
         self.train = shuffled[:-int(len(df) * 0.2)]
         self.test = shuffled[-int(len(df) * 0.2):]
+
+        self.total_train_frames = self.train['FramesPerVideo'].sum
+        self.total_test_frames = self.test['FramesPerVideo'].sum
+        # for item in self.train['FramesPerVideo'].values:
+        #     self.total_train_frames += item
+        #
+        # for item in self.test['FramesPerVideo'].values:
+        #     self.total_test_frames += item
+
 
         print("Train data: {}".format(len(self.train)))
         print("Test data: {}".format(len(self.test)))
@@ -84,7 +95,7 @@ class Dataset:
 
     def get_num_frames(self, video_number):
         row = self.data.loc[self.data['Video'] == video_number]
-        return np.squeeze(data['FramesPerVideo'].to_numpy())
+        return np.squeeze(self.data['FramesPerVideo'].to_numpy())
 
     def get_label(self, video_number):
         '''
@@ -130,8 +141,8 @@ class Dataset:
         img = cv2.imread(frame_path)
         img = cv2.resize(img, (60, 50))
         x = np.array(img)
+        x = x/255
         x = np.expand_dims(x, axis=0)
-
         return x
 
     def get_matrices(self, video_number, counter):
@@ -174,5 +185,46 @@ class Dataset:
         print("the total size of y is {}".format(y.shape))
 
         return x, y
+
+    def get_crnn_data(self, type_):
+        frames_ = 0
+
+        if type_ == 'train':
+            data = self.train
+        else:
+            data = self.test
+
+        #print(frames_)
+        video_numbers = data['Video']
+
+        i = 0
+        for vid_num in video_numbers:
+            frame_paths = self.get_frame_paths(vid_num)
+            for path in frame_paths:
+                i += 1
+        x = np.zeros((i, 50, 60, 3))
+        i = 0
+        for vid_num in video_numbers:
+            frame_paths = self.get_frame_paths(vid_num)
+            for path in frame_paths:
+                x[i, :, :, :] = self.get_matrix(path)
+                i += 1
+            #i += self.get_num_frames(vid_num)
+            print("Done with video:", vid_num)
+        #print(i)
+        print("the total size of x is {}".format(x.shape))
+
+        y = np.zeros((self.num_classes, len(data)))
+        #print(y.shape)
+
+        for i, vid_num in enumerate(video_numbers):
+            idx = self.get_oneHotIndex(vid_num)
+            y[idx, i] = 1
+
+        print("the total size of y is {}".format(y.shape))
+
+        return x, y
+
+
 
 

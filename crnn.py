@@ -11,12 +11,12 @@ from tensorflow.keras import optimizers, losses
 from tensorflow.keras import models
 
 class CRNN:
-    def __init__(self, input_shape, num_classes, model_num):
-        self.input_shape = input_shape
+    def __init__(self, img_shape, num_classes, model_num):
+        self.img_shape = img_shape
         self.num_classes = num_classes
 
         if model_num == 1:
-            model = self.get_model1(self, input_shape, num_classes)
+            model = self.get_model1(img_shape, num_classes)
 
         # elif model_num == 2:
         #     model = self.get_model2()
@@ -26,6 +26,9 @@ class CRNN:
 
 
         self.model = model
+
+    def summary(self):
+        self.model.summary()
 
     def get_model1(self, input_shape, num_classes):
         """
@@ -71,11 +74,12 @@ class CRNN:
             x = layers.Activation('relu')(x)
             return x
 
-
-        img_input = keras.Input(shape=self.input_shape)
+        img_input = keras.Input(shape=self.img_shape)
+        #CNN
         x = vgg_style(img_input)
         x = layers.Reshape((-1, 512))(x)
 
+        #RNN
         x = layers.Bidirectional(layers.LSTM(units=256, return_sequences=True))(x)
         x = layers.Bidirectional(layers.LSTM(units=256, return_sequences=True))(x)
         x = layers.Dense(units=num_classes)(x)
