@@ -82,14 +82,14 @@ class CRNN:
 
 
         #RNN
-        x = layers.Bidirectional(layers.LSTM(units=256, return_sequences=True))(x)
-        x = layers.Bidirectional(layers.LSTM(units=256, return_sequences=False))(x)
+        x = layers.LSTM(units=256, return_sequences=True))(x)
+        x = layers.LSTM(units=256, return_sequences=False))(x)
         x = layers.Dense(units=num_classes)(x)
         x = layers.Activation('softmax')(x)
         return keras.Model(inputs=img_input, outputs=x, name='CRNN')
 
 
-    def train(self, train_paths, test_paths, num_epochs=10, batch=128, lr=0.0001):
+    def train(self, train_paths, test_paths, num_epochs=3, batch=512, lr=0.0001):
         xtr_path, ytr_path = train_paths
         xts_path, yts_path = test_paths
 
