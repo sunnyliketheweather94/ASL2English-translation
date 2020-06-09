@@ -1,31 +1,38 @@
-import tensorflow as tf 
-from tensorflow import keras
 import numpy as np
 import matplotlib.pyplot as plt 
-import os
+
+import tensorflow as tf 
+from tensorflow import keras
 from tensorflow.keras.layers import Activation, Conv3D, MaxPooling3D, Flatten, Dense
 from tensorflow.keras.layers import Dropout, Input, BatchNormalization
-from sklearn.metrics import confusion_matrix, accuracy_score
 from tensorflow.keras import optimizers, losses
 from tensorflow.keras import models
+
 
 class ConvNet:
     def __init__(self, shape, num_classes, model_num):
         self.img_shape = shape
         self.num_classes = num_classes
 
-        if model_num == 1:
-            model = self.get_model1()
+        if model_num == 11:
+            model = self.exp1_1() 
 
-        elif model_num == 2:
-            model = self.get_model2()
+        elif model_num == 12:
+            model = self.exp1_2()
 
-        elif model_num == 3:
-            model = self.get_model3()
+        elif model_num == 13:
+            model = self.exp1_3()
 
+        elif model_num == 14:
+            model = self.exp1_4()
+
+        elif model_num == 15:
+            model = self.exp1_5()
+
+        elif model_num == 16:
+            model = self.exp1_6()
 
         self.model = model
-
 
     def summary(self):
         self.model.summary()
@@ -33,217 +40,304 @@ class ConvNet:
     def get_model(self):
         return self.model
 
-    def get_model1(self):
-        # "regular"
+    def exp1_1(self): # plain old regular network
         model = models.Sequential()
 
-        model.add(Conv3D(16, kernel_size = (5, 5, 5), input_shape = self.img_shape))
+        model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape))
         model.add(Activation('relu'))
         model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
 
-        model.add(Conv3D(32, kernel_size = (5, 5, 5)))
+        model.add(Conv3D(16, kernel_size = (3, 3, 3)))
         model.add(Activation('relu'))
         model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
-
-        model.add(Conv3D(32, kernel_size = (5, 5, 5)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
 
         model.add(Flatten())
-        model.add(Dense(512, activation = 'sigmoid'))
+        model.add(Dense(250, activation = 'relu'))
+        model.add(Dense(self.num_classes, activation = 'softmax'))
+
+        return model
+
+    def exp1_2(self): # just L2-regularization
+        model = models.Sequential()
+
+        model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, kernel_regularizer = regularizers.l2(0.1)))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Conv3D(32, kernel_size = (3, 3, 3), kernel_regularizer = regularizers.l2(0.1)))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Flatten())
+        model.add(Dense(250, activation = 'relu'))
+        model.add(Dense(self.num_classes, activation = 'softmax'))
+
+        return model
+
+    def exp1_3(self): # just L1-regularization
+        model = models.Sequential()
+
+        model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, kernel_regularizer = regularizers.l1(0.1)))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Conv3D(32, kernel_size = (3, 3, 3), kernel_regularizer = regularizers.l1(0.1)))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Flatten())
+        model.add(Dense(250, activation = 'relu'))
+        model.add(Dense(self.num_classes, activation = 'softmax'))
+
+        return model
+
+    def exp1_4(self): # just dropout
+        model = models.Sequential()
+
+        model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape))
+        model.add(Dropout(0.4))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Conv3D(32, kernel_size = (3, 3, 3)))
+        model.add(Dropout(0.4))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Flatten())
+        model.add(Dense(250, activation = 'relu'))
+        model.add(Dropout(0.4))
+        model.add(Dense(self.num_classes, activation = 'softmax'))
+
+        return model
+
+    def exp1_5(self): # dropout + L2-regularization
+        model = models.Sequential()
+
+        model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, kernel_regularizer = regularizers.l2(0.1)))
+        model.add(Dropout(0.4))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Conv3D(32, kernel_size = (3, 3, 3), kernel_regularizer = regularizers.l2(0.1)))
+        model.add(Dropout(0.4))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Flatten())
+        model.add(Dense(250, activation = 'relu'))
+        model.add(Dropout(0.4))
+        model.add(Dense(self.num_classes, activation = 'softmax'))
+
+        return model
+
+    def exp1_6(self): # dropout + L1-regularization
+        model = models.Sequential()
+
+        model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, kernel_regularizer = regularizers.l1(0.1)))
+        model.add(Dropout(0.4))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Conv3D(32, kernel_size = (3, 3, 3), kernel_regularizer = regularizers.l1(0.1)))
+        model.add(Dropout(0.4))
+        model.add(Activation('relu'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+        model.add(Flatten())
+        model.add(Dense(250, activation = 'relu'))
+        model.add(Dropout(0.4))
         model.add(Dense(self.num_classes, activation = 'softmax'))
 
         return model
 
 
+    def train(self, train_paths, test_paths, exp_name, num_epochs = 7, batch = 4, lr = 0.0001):
+        '''
+        exp_name = experiment number (check __init__ for the exp num)
+        e.g. if we're running on exp 5 for regular network (model 1), then exp_num = 15
 
-    def get_model2(self):
-        # deeper
-        model = models.Sequential()
+        saves losses/accuracies under name: "15_loss.png" and "15_accuracy.png" if exp_num = 15
+        '''
+        x_train = np.load(train_paths[0])
+        y_train = np.load(train_paths[1])
 
-        model.add(Conv3D(16, kernel_size = (5, 5, 5), input_shape = self.shape))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
+        x_test = np.load(test_paths[0])
+        y_test = np.load(test_paths[1])
 
-        model.add(Conv3D(16, kernel_size = (5, 5, 5)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
+        # logs = "logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        # tensorboard = TensorBoard(log_dir = logs, histogram_freq = 1)
 
-        model.add(Conv3D(32, kernel_size = (5, 5, 5)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
-
-        model.add(Conv3D(32, kernel_size = (5, 5, 5)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
-
-        model.add(Conv3D(48, kernel_size = (5, 5, 5)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
-
-        model.add(Conv3D(64, kernel_size = (5, 5, 5)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
-
-        model.add(Flatten())
-        model.add(Dense(1024, activation = 'sigmoid'))
-        model.add(Dense(512, activation = 'sigmoid'))
-        model.add(Dense(self.num_classes, activation = 'softmax'))
-
-        return model
-
-
-
-    def get_model3(self):
-        # wider
-        model = models.Sequential()
-
-        model.add(Conv3D(16, kernel_size = (5, 5, 5), input_shape = self.shape))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
-
-        model.add(Conv3D(128, kernel_size = (5, 5, 5)))
-        model.add(Activation('relu'))
-        model.add(BatchNormalization())
-        model.add(MaxPooling3D(pool_size = (5, 5, 5)))
-
-        model.add(Flatten())
-        model.add(Dense(512, activation = 'sigmoid'))
-        model.add(Dense(self.num_classes, activation = 'softmax'))
-
-        return model
-
-
-
-    def train(self, train_paths, test_paths, num_epochs = 20, batch = 4, lr = 0.0001):
-        xtr_path, ytr_path = train_paths
-        xts_path, yts_path = test_paths
-
-        x_train = np.load(xtr_path)
-        y_train = np.load(ytr_path)
-
-        x_test = np.load(xts_path)
-        y_test = np.load(yts_path)
-
-        opt = optimizers.Adam(learning_rate = lr, beta_1 = 0.95, beta_2 = 0.98)
-        # opt = optimizers.SGD(learning_rate = 0.0001)
+        opt = optimizers.Adam(learning_rate = lr)
         self.model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
-        self.history = self.model.fit(x_train, y_train.T, epochs = num_epochs, batch_size = batch)
+        history = self.model.fit(x_train, y_train.T, epochs = num_epochs, batch_size = batch, validation_split = 0.2)
+        # history = self.model.fit(x_train, y_train.T, epochs = num_epochs, batch_size = batch, validation_split = 0.2, callbacks = [tensorboard])
         
-        # test_eval = self.model.evaluate(x_test, y_test.T)
-        # print("Test evaluation:\nLoss = {}\nAccuracy = {}".format(test_eval[0], test_eval[1]))
+        print('-' * 35)
+        print('-' * 35)
+        print("Finished training....\nNow Evaluating:")
 
-        self.plot_accuracy()
-        self.plot_loss()
+        train_eval = self.model.evaluate(x_train, y_train.T, verbose = 0)
+        print("Train evaluation:\n\tLoss = {}\n\tAccuracy = {:.2f}%".format(train_eval[0], train_eval[1] * 100))
 
-        return train_eval
+        test_eval = self.model.evaluate(x_test, y_test.T, verbose = 0)
+        print("Test evaluation:\n\tLoss = {}\n\tAccuracy = {}%".format(test_eval[0], test_eval[1] * 100))
 
-
-
-    def plot_accuracy(self, save = True):
-        hist = self.history 
-
-        # plot the accuracy over epochs
-        plt.plot(hist.history['accuracy'])
-        plt.title('Model accuracy')
-        plt.xlabel('Epoch')
-        plt.ylabel('Accuracy')
-        
-        if not save:
-            plt.show()
-
-        else:
-            plt.savefig('accuracy.png')
-
-    def plot_loss(self, save = True):
-        hist = self.history 
-
-        # plot the loss over epochs
-        plt.plot(hist.history['loss'])
-        plt.title('Model loss')
-        plt.xlabel('Epoch')
+        plt.plot(history.history['loss'], label = 'Loss')
+        plt.plot(history.history['val_loss'], label = 'Val Loss')
+        plt.title('Loss')
+        plt.xlabel('Epochs')
         plt.ylabel('Loss')
-        
-        if not save:
-            plt.show()
+        plt.legend()
 
-        else:
-            plt.savefig('loss.png')
+        file_name = exp_name + '_loss.png'
+        plt.savefig(file_name)
+        plt.clf()
 
-    def vary_AdamLR(self, xtr_path, ytr_path, xts_path, yts_path):
-        x_train, y_train = np.load(xtr_path), np.load(ytr_path)
-        x_test, y_test = np.load(xts_path, yts_path)
+        plt.plot(history.history['accuracy'], label = 'Accuracy')
+        plt.plot(history.history['val_accuracy'], label = 'Val accuracy')
+        plt.title('Accuracy')
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.legend()
 
-        model = self.get_model()
+        file_name = exp_name + '_accuracy.png'
+        plt.savefig(exp_name)
+        plt.clf()
 
-        rates = np.linspace(1.e-6, 1.e-2, 8)
-        accuracies = []
-        losses = []
+    # def get_deeper_CNN(self):
+    #     model = models.Sequential()
 
-        for r in rates:
-            opt = optimizers.Adam(learning_rate = r)
-            model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
-            history = model.fit(x_train, y_train.T, epochs = 6, batch_size = 8)
+    #     model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, activation = 'relu',  kernel_regularizer = regularizers.l2(0.01)))
+    #     # model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, activation = 'relu'))
+    #     # model.add(Dropout(0.4))
+    #     model.add(BatchNormalization())
+    #     model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
 
-            train_eval = model.evaluate(x_train, y_train.T)
-            accuracies.append(history.hist['accuracy'])
-            losses.append(history.hist['loss'])
+    #     model.add(Conv3D(16, kernel_size = (3, 3, 3), activation = 'relu', kernel_regularizer = regularizers.l2(.1)))
+    #     # model.add(Conv3D(16, kernel_size = (3, 3, 3), activation = 'relu'))
+    #     # model.add(Dropout(0.4))
+    #     # model.add(Activation('relu'))
+    #     model.add(BatchNormalization())
+    #     model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
 
-        plot('Adam', rates, losses, accuracies)
+    #     model.add(Conv3D(32, kernel_size = (3, 3, 3), activation = 'relu', kernel_regularizer = regularizers.l2(.1)))
+    #     # model.add(Conv3D(16, kernel_size = (3, 3, 3), activation = 'relu'))
+    #     # model.add(Dropout(0.4))
+    #     # model.add(Activation('relu'))
+    #     model.add(BatchNormalization())
+    #     model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+    #     model.add(Conv3D(32, kernel_size = (3, 3, 3), activation = 'relu', kernel_regularizer = regularizers.l2(.1)))
+    #     # model.add(Conv3D(16, kernel_size = (3, 3, 3), activation = 'relu'))
+    #     # model.add(Dropout(0.4))
+    #     # model.add(Activation('relu'))
+    #     model.add(BatchNormalization())
+    #     model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
+
+    #     model.add(Flatten())
+    #     model.add(Dense(1000, activation = 'sigmoid'))
+    #     model.add(Dropout(0.4))
+    #     model.add(Dense(500, activation = 'sigmoid'))
+    #     model.add(Dropout(0.2))
+    #     model.add(Dense(self.num_classes, activation = 'softmax'))
+
+    #     return model
 
 
 
-    def vary_SGDLR(self, xtr_path, ytr_path, xts_path, yts_path):
-        x_train, y_train = np.load(xtr_path), np.load(ytr_path)
-        x_test, y_test = np.load(xts_path, yts_path)
+    # def get_wider_CNN(self):
+    #     model = models.Sequential()
 
-        model = self.get_model()
+    #     model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape))
+    #     model.add(Activation('relu'))
+    #     model.add(BatchNormalization())
+    #     model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
 
-        rates = np.linspace(1.e-6, 1.e-2, 8)
-        accuracies = []
+    #     model.add(Conv3D(128, kernel_size = (3, 3, 3)))
+    #     model.add(Activation('relu'))
+    #     model.add(BatchNormalization())
+    #     model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
 
-        for r in rates:
-            opt = optimizers.SGD(learning_rate = r)
-            model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
-            history = model.fit(x_train, y_train.T, epochs = 6, batch_size = 8)
+    #     model.add(Conv3D(32, kernel_size = (3, 3, 3)))
+    #     model.add(Activation('relu'))
+    #     model.add(BatchNormalization())
+    #     model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
 
-            train_eval = model.evaluate(x_train, y_train.T)
-            accuracies.append(history.hist['accuracy'])
+    #     model.add(Flatten())
+    #     model.add(Dense(1024, activation = 'sigmoid'))
+    #     model.add(Dense(self.num_classes, activation = 'softmax'))
 
-        plot('SGD', rates, losses, accuracies)
-
-
-
-
+    #     return model
 
 def plot(opt, rates, losses, accuracies):
-    for i in range(len(rates)):
-        plt.plot(rates[i], accuracies[i], label = f'$r$ = {rates[i]:.3f}')
+    x = np.arange(len(accuracies[0])) + 1
 
-    plt.xlabel('Learning rates')
+    for i in range(len(rates)):
+        plt.plot(x, accuracies[i], label = f'$r$ = {rates[i]:.2e}')
+
+    plt.xlabel('Number of epochs')
     plt.ylabel('Accuracy')
     plt.legend()
-    plt.title('Accuracy versus Learning Rate')
+    plt.title('Accuracy')
+
     file_name = 'accuracy_' + opt + '.png'
     plt.savefig(file_name)
+    plt.clf()
 
     for i in range(len(rates)):
-        plt.plot(rates[i], losses[i], label = f'$r$ = {rates[i]:.3f}')
+        plt.plot(x, losses[i], label = f'$r$ = {rates[i]:.2e}')
 
-    plt.xlabel('Learning rates')
+    plt.xlabel('Number of epochs')
     plt.ylabel('Loss')
     plt.legend()
-    plt.title('Loss versus Learning Rate')
+    plt.title('Loss')
+
     file_name = 'loss_' + opt + '.png'
     plt.savefig(file_name)
+    plt.clf()
+
+
+def vary_learning_rate(train_path, test_path, img_size, num_classes, optimizer = 'Adam'):
+    x_train, y_train = np.load(train_path[0]), np.load(train_path[1])
+    x_test, y_test = np.load(test_path[0]), np.load(test_path[1])
+
+    rates = np.logspace(-6, -2, 5)
+    accuracies = []
+    losses = []
+
+    for i in range(len(rates)):
+        print(f"Learning rate = {rates[i]:.3e}")
+        cnn_model = ConvNet(img_size, num_classes, model_num = 1)
+        model = cnn_model.get_model()
+
+        if optimizer == 'Adam':
+            opt = optimizers.Adam(learning_rate = rates[i]) 
+
+        else:
+            opt = optimizers.SGD(learning_rate = rates[i])
+
+        model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
+        hist = model.fit(x_train, y_train.T, epochs = 7, batch_size = 9)
+
+        accuracies.append(hist.history['accuracy'])
+        losses.append(hist.history['loss'])
+        print('-' * 35)
+        print('-' * 35)
+
+    plot(optimizer, rates, losses, accuracies)
+
+
 
