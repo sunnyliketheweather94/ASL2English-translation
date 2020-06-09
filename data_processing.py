@@ -7,6 +7,9 @@ import glob
 from sklearn.utils import shuffle
 import tensorflow.keras.preprocessing as tf_pre 
 import string
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.python.keras.utils.np_utils import to_categorical
 
 pd.set_option('display.max_colwidth', 100)
 

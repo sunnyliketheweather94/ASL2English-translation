@@ -98,10 +98,10 @@ class CRNN:
 
         opt = optimizers.Adam(learning_rate=lr, beta_1=0.95, beta_2=0.98)
         # opt = optimizers.SGD(learning_rate = 0.0001)
-        self.model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-        self.history = self.model.fit(x_train, y_train.T, epochs=num_epochs, batch_size=batch)
+        self.model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        self.history = self.model.fit(x_train, y_train, epochs=num_epochs, batch_size=batch)
 
-        train_eval = self.model.evaluate(x_test, y_test.T)
+        train_eval = self.model.evaluate(x_test, y_test)
         print("Test evaluation:\nLoss = {}\nAccuracy = {}".format(train_eval[0], train_eval[1]))
 
         #test_eval = self.model.evaluate(x_test, y_test.T)
