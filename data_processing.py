@@ -215,14 +215,16 @@ class Dataset:
             for path in frame_paths:
                 i += 1
         x = np.zeros((i, 50, 60, 3))
-        y = np.zeros((i, 1))
+        y = np.zeros((i, self.num_classes))
         i = 0
         #create x_train/test (one training example per frame) and y_train (same label for all frames in a particular video)
         for vid_num in video_numbers:
             frame_paths = self.get_frame_paths(vid_num)
             for path in frame_paths:
                 x[i, :, :, :] = self.get_frame_matrix(path)
-                y[i,:] = self.get_oneHotIndex(vid_num)
+                idx = self.get_oneHotIndex(vid_num)
+                y[i, idx] = 1
+                #y[i] = self.get_oneHotIndex(vid_num)
                 i += 1
             print("Done with video:", vid_num)
         print("the total size of x is {}".format(x.shape))

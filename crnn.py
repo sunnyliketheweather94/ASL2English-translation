@@ -78,15 +78,18 @@ class CRNN:
         #CNN
         x = vgg_style(img_input)
         x = layers.Reshape((-1, 512))(x)
+        #x = layers.Flatten()(x)
+
 
         #RNN
         x = layers.Bidirectional(layers.LSTM(units=256, return_sequences=True))(x)
-        x = layers.Bidirectional(layers.LSTM(units=256, return_sequences=True))(x)
+        x = layers.Bidirectional(layers.LSTM(units=256, return_sequences=False))(x)
         x = layers.Dense(units=num_classes)(x)
+        x = layers.Activation('softmax')(x)
         return keras.Model(inputs=img_input, outputs=x, name='CRNN')
 
 
-    def train(self, train_paths, test_paths, num_epochs=20, batch=4, lr=0.0001):
+    def train(self, train_paths, test_paths, num_epochs=10, batch=128, lr=0.0001):
         xtr_path, ytr_path = train_paths
         xts_path, yts_path = test_paths
 
@@ -98,7 +101,7 @@ class CRNN:
 
         opt = optimizers.Adam(learning_rate=lr, beta_1=0.95, beta_2=0.98)
         # opt = optimizers.SGD(learning_rate = 0.0001)
-        self.model.compile(optimizer=opt, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        self.model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
         self.history = self.model.fit(x_train, y_train, epochs=num_epochs, batch_size=batch)
 
         train_eval = self.model.evaluate(x_test, y_test)

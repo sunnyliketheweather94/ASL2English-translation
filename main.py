@@ -33,17 +33,17 @@ import utils
 # np.save('/Users/teresanoyola/Desktop/CS230/Project/y_train_crnn.npy', y_train)
 # np.save('/Users/teresanoyola/Desktop/CS230/Project/x_test_crnn.npy', x_test)
 # np.save('/Users/teresanoyola/Desktop/CS230/Project/y_test_crnn.npy', y_test)
-
-
-
-'''Load data if already created'''
-
-# local machine
-# x_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/x_train_3Dcnn.npy') # 3D CNN
-# y_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/y_train_3Dcnn.npy')
-# x_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/x_test_3Dcnn.npy') # 3D CNN
-# y_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/x_test_3Dcnn.npy')
-
+#
+#
+#
+# '''Load data if already created'''
+#
+# # local machine
+# # x_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/x_train_3Dcnn.npy') # 3D CNN
+# # y_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/y_train_3Dcnn.npy')
+# # x_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/x_test_3Dcnn.npy') # 3D CNN
+# # y_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/x_test_3Dcnn.npy')
+#
 # x_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/x_train_crnn.npy') # CRNN
 # y_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/y_train_crnn.npy')
 # x_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/x_test_crnn.npy') # CRNN
