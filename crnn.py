@@ -84,8 +84,8 @@ class CRNN:
 
 
         #RNN
-        x = layers.LSTM(units=256, return_sequences=True)(x)
-        x = layers.LSTM(units=256, return_sequences=False)(x)
+        x = layers.LSTM(units=64, return_sequences=True)(x)
+        x = layers.LSTM(units=64, return_sequences=False)(x)
         x = layers.Dense(units=num_classes)(x)
         x = layers.Activation('softmax')(x)
         return keras.Model(inputs=img_input, outputs=x, name='CRNN')
