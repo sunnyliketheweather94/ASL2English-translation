@@ -52,6 +52,7 @@ class Dataset:
         shuffled = shuffle(df)
         self.data = shuffled
 
+        # 80% train, 20% test
         self.train = shuffled[:-int(len(df) * 0.2)]
         self.test = shuffled[-int(len(df) * 0.2):]
 
@@ -68,7 +69,7 @@ class Dataset:
         print("Test data: {}".format(len(self.test)))
 
         # create a dictionary of all the words in the labels
-        # the value for each word is going to be its index in the oneHot encoding
+        # the value for each word is going to be its index in the oneHot encoding (map each word to an index)
         label_dict = {}
         i = 0
         for word in shuffled['Label']:
@@ -82,7 +83,7 @@ class Dataset:
         self.Int2Words = {c : i for i, c in self.Words2Int.items()}
         self.num_classes = len(self.Words2Int)
 
-        self.img_size = (self.max_frames, 125, 150, 3)
+        self.img_size = (self.max_frames, 50, 60, 3)
 
     def get_frame_paths(self, video_number):
         row = self.data.loc[self.data['Video'] == video_number]
