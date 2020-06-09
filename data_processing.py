@@ -83,7 +83,11 @@ class Dataset:
         self.Int2Words = {c : i for i, c in self.Words2Int.items()}
         self.num_classes = len(self.Words2Int)
 
-        self.img_size = (self.max_frames, 50, 60, 3)
+        #3D CNN
+        #self.img_size = (self.max_frames, 125, 150, 3) ?
+        #CRNN
+        self.img_size = (50, 60, 3)
+
 
     def get_frame_paths(self, video_number):
         row = self.data.loc[self.data['Video'] == video_number]
@@ -138,7 +142,8 @@ class Dataset:
 
         return self.Words2Int[label]
 
-    def get_matrix(self, frame_path):
+    # 2-D matrix representation of frame image
+    def get_frame_matrix(self, frame_path):
         img = cv2.imread(frame_path)
         img = cv2.resize(img, (60, 50))
         x = np.array(img)
@@ -146,38 +151,39 @@ class Dataset:
         x = np.expand_dims(x, axis=0)
         return x
 
-    def get_matrices(self, video_number, counter):
+    # 3-D volume representation of video (including time dimension, which equals # of frames in video)
+    def get_video_volume(self, video_number, counter):
         frame_paths = self.get_frame_paths(video_number)
 
-        matrices = np.zeros((self.max_frames, 50, 60, 3))
+        volume = np.zeros((self.max_frames, 50, 60, 3))
 
         for i, p in enumerate(frame_paths):
-            matrices[i, :, :, :] = self.get_matrix(p)
+            volume[i, :, :, :] = self.get_frame_matrix(p)
 
-        print("{}. Size for video {} is {}.".format(counter, video_number, matrices.shape))
+        print("{}. Size for video {} is {}.".format(counter, video_number, volume.shape))
 
-        return matrices
+        return volume
 
-    def get_data(self, type_):
+    def get_3Dcnn_data(self, type_):
         if type_ == 'train':
             data = self.train
-        
         else:
             data = self.test
 
-
         video_numbers = data['Video']
-        
+
+        # create x_train - one training example per video
         counter = 1
         x = np.zeros((len(data), self.max_frames, 50, 60, 3))
         for i, vid_num in enumerate(video_numbers):
             counter += 1
-            x[i, :, :, :, :] = self.get_matrices(vid_num, counter)
+            x[i, :, :, :, :] = self.get_video_volume(vid_num, counter)
             
         print("the total size of x is {}".format(x.shape))
 
+        # create y_train - one index per video
         y = np.zeros((self.num_classes, len(data)))
-        print(y.shape)
+        print("y shape: ", y.shape)
 
         for i, vid_num in enumerate(video_numbers):
             idx = self.get_oneHotIndex(vid_num)
@@ -198,29 +204,31 @@ class Dataset:
         #print(frames_)
         video_numbers = data['Video']
 
+        '''Create x_train(no padding)'''
         i = 0
+        #count frames per video to initialize x_train/test shape
         for vid_num in video_numbers:
             frame_paths = self.get_frame_paths(vid_num)
             for path in frame_paths:
                 i += 1
         x = np.zeros((i, 50, 60, 3))
+        y = np.zeros((i, 1))
         i = 0
+        #create x_train/test (one training example per frame) and y_train (same label for all frames in a particular video)
         for vid_num in video_numbers:
             frame_paths = self.get_frame_paths(vid_num)
             for path in frame_paths:
-                x[i, :, :, :] = self.get_matrix(path)
+                x[i, :, :, :] = self.get_frame_matrix(path)
+                y[i,:] = self.get_oneHotIndex(vid_num)
                 i += 1
-            #i += self.get_num_frames(vid_num)
             print("Done with video:", vid_num)
-        #print(i)
         print("the total size of x is {}".format(x.shape))
 
-        y = np.zeros((self.num_classes, len(data)))
-        #print(y.shape)
-
-        for i, vid_num in enumerate(video_numbers):
-            idx = self.get_oneHotIndex(vid_num)
-            y[idx, i] = 1
+        # # create y_train/test
+        #
+        # for i, vid_num in enumerate(video_numbers):
+        #     idx = self.get_oneHotIndex(vid_num)
+        #     y[idx, i] = 1
 
         print("the total size of y is {}".format(y.shape))
 
