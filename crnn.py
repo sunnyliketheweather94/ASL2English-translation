@@ -9,6 +9,8 @@ from tensorflow.keras.layers import Dropout, Input, BatchNormalization
 from sklearn.metrics import confusion_matrix, accuracy_score
 from tensorflow.keras import optimizers, losses
 from tensorflow.keras import models
+from tensorflow.keras.callbacks import TensorBoard
+import datetime
 
 class CRNN:
     def __init__(self, img_shape, num_classes, model_num):
@@ -99,10 +101,14 @@ class CRNN:
         x_test = np.load(xts_path)
         y_test = np.load(yts_path)
 
+        #Tensorboard
+        logs = "logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        tensorboard = TensorBoard(log_dir = logs, histogram_freq = 1)
+        
         opt = optimizers.Adam(learning_rate=lr, beta_1=0.95, beta_2=0.98)
         # opt = optimizers.SGD(learning_rate = 0.0001)
         self.model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-        self.history = self.model.fit(x_train, y_train, epochs=num_epochs, batch_size=batch)
+        self.history = self.model.fit(x_train, y_train, epochs=num_epochs, batch_size=batch, callbacks = [tensorboard])
 
         train_eval = self.model.evaluate(x_test, y_test)
         print("Test evaluation:\nLoss = {}\nAccuracy = {}".format(train_eval[0], train_eval[1]))
