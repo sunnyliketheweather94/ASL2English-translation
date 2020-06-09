@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.layers import Activation, Conv3D, MaxPooling3D, Flatten, Dense
 from tensorflow.keras.layers import Dropout, Input, BatchNormalization
-from tensorflow.keras import optimizers, losses
+from tensorflow.keras import optimizers, losses, regularizers
 from tensorflow.keras import models
 
 

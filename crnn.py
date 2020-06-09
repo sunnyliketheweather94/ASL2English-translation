@@ -1,13 +1,10 @@
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
 import numpy as np
 import matplotlib.pyplot as plt
-import os
-from tensorflow.keras.layers import Activation, Conv3D, MaxPooling3D, Flatten, Dense
-from tensorflow.keras.layers import Dropout, Input, BatchNormalization
-from sklearn.metrics import confusion_matrix, accuracy_score
-from tensorflow.keras import optimizers, losses
+
+import tensorflow as tf
+from tensorflow.keras.layers import Activation, Conv2D, MaxPool2D, Flatten, Dense
+from tensorflow.keras.layers import Dropout, Input, BatchNormalization, LSTM, Reshape
+from tensorflow.keras import optimizers, losses, regularizers
 from tensorflow.keras import models
 from tensorflow.keras.callbacks import TensorBoard
 import datetime
@@ -17,158 +14,448 @@ class CRNN:
         self.img_shape = img_shape
         self.num_classes = num_classes
 
-        if model_num == 1:
-            model = self.get_model1(img_shape, num_classes)
+        if model_num == 11: # just regular network
+            model = self.exp1_1()
 
-        # elif model_num == 2:
-        #     model = self.get_model2()
-        #
-        # elif model_num == 3:
-        #     model = self.get_model3()
+        elif model_num == 12: # with L2-regularization
+            model = self.exp1_2()
 
+        elif model_num == 13: # with L1-regularization
+            model = self.exp1_3()
+
+        elif model_num == 14: # with dropout
+            model = self.exp1_4()
+
+        elif model_num == 15: # with L2-regularization + dropout
+            model = self.exp1_5()
+
+        elif model_num == 16: # with L1-regularization + dropout
+            model = self.exp1_6()
 
         self.model = model
 
     def summary(self):
         self.model.summary()
 
-    def get_model1(self, input_shape, num_classes):
+    ############################################################################
+
+    def exp1_1(self):
         """
         build CNN-RNN model
         """
-        def vgg_style(input_tensor):
-            """
-            The original feature extraction structure from CRNN paper.
-            Related paper: https://ieeexplore.ieee.org/abstract/document/7801919
-            """
-            x = layers.Conv2D(
-                filters=64,
-                kernel_size=3,
-                padding='same',
-                activation='relu')(input_tensor)
-            x = layers.MaxPool2D(pool_size=2, padding='same')(x)
+        img_input = Input(shape = self.img_shape)
+        x = Conv2D(filters = 64, kernel_size = 3, padding = 'same')(img_input)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
 
-            x = layers.Conv2D(
-                filters=128,
-                kernel_size=3,
-                padding='same',
-                activation='relu')(x)
-            x = layers.MaxPool2D(pool_size=2, padding='same')(x)
+        x = Conv2D(filters = 128, kernel_size = 3, padding = 'same')(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
 
-            x = layers.Conv2D(filters=256, kernel_size=3, padding='same')(x)
-            x = layers.BatchNormalization()(x)
-            x = layers.Activation('relu')(x)
-            x = layers.Conv2D(filters=256, kernel_size=3, padding='same',
-                              activation='relu')(x)
-            x = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 1),
-                                 padding='same')(x)
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same')(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same')(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, strides = (2, 1), padding = 'same')(x)
 
-            x = layers.Conv2D(filters=512, kernel_size=3, padding='same')(x)
-            x = layers.BatchNormalization()(x)
-            x = layers.Activation('relu')(x)
-            x = layers.Conv2D(filters=512, kernel_size=3, padding='same',
-                              activation='relu')(x)
-            x = layers.MaxPool2D(pool_size=(2, 2), strides=(2, 1),
-                                 padding='same')(x)
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same')(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
 
-            x = layers.Conv2D(filters=512, kernel_size=2)(x)
-            x = layers.BatchNormalization()(x)
-            x = layers.Activation('relu')(x)
-            return x
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same')(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = (2, 2), strides = (2, 1), padding = 'same')(x)
 
-        img_input = keras.Input(shape=self.img_shape)
-        #CNN
-        x = vgg_style(img_input)
-        x = layers.Reshape((-1, 512))(x)
-        #x = layers.Flatten()(x)
-
+        x = Conv2D(filters = 512, kernel_size = 2)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Reshape((-1, 512))(x)
 
         #RNN
-        x = layers.LSTM(units=64, return_sequences=True)(x)
-        x = layers.LSTM(units=64, return_sequences=False)(x)
-        x = layers.Dense(units=num_classes)(x)
-        x = layers.Activation('softmax')(x)
-        return keras.Model(inputs=img_input, outputs=x, name='CRNN')
+        x = LSTM(units = 64, return_sequences=True)(x)
+        x = LSTM(units = 64, return_sequences=False)(x)
+
+        x = Dense(units = num_classes)(x)
+        x = Activation('softmax')(x)
+
+        return keras.Model(inputs = img_input, outputs = x, name='CRNN')
+
+    ############################################################################
+
+    def exp1_2(self):
+        """
+        build CNN-RNN model
+        """
+        img_input = Input(shape = self.img_shape)
+        x = Conv2D(filters = 64, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(img_input)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 128, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = (2, 2), strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 2, kernel_regularizer = regularizers.l2(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Reshape((-1, 512))(x)
+
+        #RNN
+        x = LSTM(units = 64, return_sequences = True, kernel_regularizer = regularizers.l2(0.1))(x)
+        x = LSTM(units = 64, return_sequences = False, kernel_regularizer = regularizers.l2(0.1))(x)
+
+        x = Dense(units = num_classes)(x)
+        x = Activation('softmax')(x)
+
+        return keras.Model(inputs = img_input, outputs = x, name='CRNN')
+
+    ############################################################################
+
+    def exp1_3(self):
+        """
+        build CNN-RNN model
+        """
+        img_input = Input(shape = self.img_shape)
+        x = Conv2D(filters = 64, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(img_input)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 128, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = (2, 2), strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 2, kernel_regularizer = regularizers.l1(0.1))(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Reshape((-1, 512))(x)
+
+        #RNN
+        x = LSTM(units = 64, return_sequences=True, kernel_regularizer = regularizers.l1(0.1))(x)
+        x = LSTM(units = 64, return_sequences=False, kernel_regularizer = regularizers.l1(0.1))(x)
+
+        x = Dense(units = num_classes)(x)
+        x = Activation('softmax')(x)
+
+        return keras.Model(inputs = img_input, outputs = x, name='CRNN')
+
+    ############################################################################
+
+    def exp1_4(self):
+        """
+        build CNN-RNN model
+        """
+        img_input = Input(shape = self.img_shape)
+        x = Conv2D(filters = 64, kernel_size = 3, padding = 'same')(img_input)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 128, kernel_size = 3, padding = 'same')(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same')(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same')(x)
+        x = Dropout(rate = 0.4)(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same')(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same')(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = (2, 2), strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 2)(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Reshape((-1, 512))(x)
+
+        #RNN
+        x = LSTM(units = 64, return_sequences=True)(x)
+        x = LSTM(units = 64, return_sequences=False)(x)
+
+        x = Dense(units = num_classes)(x)
+        x = Activation('softmax')(x)
+
+        return keras.Model(inputs = img_input, outputs = x, name='CRNN')
+
+    ############################################################################
+
+    def exp1_5(self):
+        """
+        build CNN-RNN model
+        """
+        img_input = Input(shape = self.img_shape)
+        x = Conv2D(filters = 64, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(img_input)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 128, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l2(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = (2, 2), strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 2, kernel_regularizer = regularizers.l2(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Reshape((-1, 512))(x)
+
+        #RNN
+        x = LSTM(units = 64, return_sequences = True, kernel_regularizer = regularizers.l2(0.1))(x)
+        x = LSTM(units = 64, return_sequences = False, kernel_regularizer = regularizers.l2(0.1))(x)
+
+        x = Dense(units = num_classes)(x)
+        x = Activation('softmax')(x)
+
+        return keras.Model(inputs = img_input, outputs = x, name='CRNN')
+
+    ############################################################################
+
+    def exp1_6(self):
+        """
+        build CNN-RNN model
+        """
+        img_input = Input(shape = self.img_shape)
+
+        x = Conv2D(filters = 64, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(img_input)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 128, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Conv2D(filters = 256, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = 2, strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        x = MaxPool2D(pool_size = (2, 2), strides = (2, 1), padding = 'same')(x)
+
+        x = Conv2D(filters = 512, kernel_size = 2, kernel_regularizer = regularizers.l1(0.1))(x)
+        x = Dropout(rate = 0.4)(x)
+        x = BatchNormalization()(x)
+        x = Activation('relu')(x)
+        
+        x = Reshape((-1, 512))(x)
+
+        #RNN
+        x = LSTM(units = 64, return_sequences=True, kernel_regularizer = regularizers.l1(0.1))(x)
+        x = LSTM(units = 64, return_sequences=False, kernel_regularizer = regularizers.l1(0.1))(x)
+
+        x = Dense(units = num_classes)(x)
+        x = Activation('softmax')(x)
+
+        return keras.Model(inputs = img_input, outputs = x, name='CRNN')
 
 
-    def train(self, train_paths, test_paths, num_epochs=5, batch=128, lr=0.0001):
-        xtr_path, ytr_path = train_paths
-        xts_path, yts_path = test_paths
-
-        x_train = np.load(xtr_path)
-        y_train = np.load(ytr_path)
-
-        x_test = np.load(xts_path)
-        y_test = np.load(yts_path)
+    def train(self, train_paths, test_paths, num_epochs = 7, batch = 1024, lr = 0.0001):
+        x_train, y_train = np.load(train_paths[0]), np.load(train_paths[1])
+        x_test, y_test = np.load(test_paths[0]), np.load(test_paths[1])
 
         #Tensorboard
-        logs = "logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        tensorboard = TensorBoard(log_dir = logs, histogram_freq = 1)
+        # logs = "logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        # tensorboard = TensorBoard(log_dir = logs, histogram_freq = 1)
         
-        opt = optimizers.Adam(learning_rate=lr, beta_1=0.95, beta_2=0.98)
-        # opt = optimizers.SGD(learning_rate = 0.0001)
-        self.model.compile(optimizer=opt, loss='categorical_crossentropy', metrics=['accuracy'])
-        self.history = self.model.fit(x_train, y_train, epochs=num_epochs, batch_size=batch, callbacks = [tensorboard])
+        opt = optimizers.Adam(learning_rate = lr)
+        self.model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
+        history = self.model.fit(x_train, y_train, epochs = num_epochs, batch_size = batch)
+        # self.history = self.model.fit(x_train, y_train, epochs = num_epochs, batch_size = batch, callbacks = [tensorboard])
 
-        train_eval = self.model.evaluate(x_test, y_test)
-        print("Test evaluation:\nLoss = {}\nAccuracy = {}".format(train_eval[0], train_eval[1]))
+        print('-' * 35)
+        print('-' * 35)
+        print("Finished training....\nNow Evaluating:")
 
-        #test_eval = self.model.evaluate(x_test, y_test.T)
-        #print("Test evaluation:\nLoss = {}\nAccuracy = {}".format(test_eval[0], test_eval[1]))
+        train_eval = self.model.evaluate(x_train, y_train.T, verbose = 0)
+        print("Train evaluation:\n\tLoss = {}\n\tAccuracy = {:.2f}%".format(train_eval[0], train_eval[1] * 100))
 
+        test_eval = self.model.evaluate(x_test, y_test.T, verbose = 0)
+        print("Test evaluation:\n\tLoss = {}\n\tAccuracy = {}%".format(test_eval[0], test_eval[1] * 100))
 
-        self.plot_accuracy()
-        self.plot_loss()
-
-        return train_eval
-
-    def plot_accuracy(self, save=True):
-        hist = self.history
-
-        # plot the accuracy over epochs
-        plt.plot(hist.history['accuracy'])
-        plt.title('Model accuracy')
-        plt.xlabel('Epoch')
-        plt.ylabel('Accuracy')
-
-        if not save:
-            plt.show()
-
-        else:
-            plt.savefig('accuracy.png')
-
-    def plot_loss(self, save=True):
-        hist = self.history
-
-        # plot the loss over epochs
-        plt.plot(hist.history['loss'])
-        plt.title('Model loss')
-        plt.xlabel('Epoch')
+        plt.plot(history.history['loss'], label = 'Loss')
+        plt.plot(history.history['val_loss'], label = 'Val Loss')
+        plt.title('Loss')
+        plt.xlabel('Epochs')
         plt.ylabel('Loss')
+        plt.legend()
 
-        if not save:
-            plt.show()
+        file_name = exp_name + '_loss.png'
+        plt.savefig(file_name)
+        plt.clf()
 
-        else:
-            plt.savefig('loss.png')
+        plt.plot(history.history['accuracy'], label = 'Accuracy')
+        plt.plot(history.history['val_accuracy'], label = 'Val accuracy')
+        plt.title('Accuracy')
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.legend()
+
+        file_name = exp_name + '_accuracy.png'
+        plt.savefig(exp_name)
+        plt.clf()
+
+    ############################################################################
+    ############################################################################
+    ############################################################################
 
 def plot(opt, rates, losses, accuracies):
-    for i in range(len(rates)):
-        plt.plot(rates[i], accuracies[i], label = f'$r$ = {rates[i]:.3f}')
+    x = np.arange(len(accuracies[0])) + 1
 
-    plt.xlabel('Learning rates')
+    for i in range(len(rates)):
+        plt.plot(x, accuracies[i], label = f'$r$ = {rates[i]:.2e}')
+
+    plt.xlabel('Number of epochs')
     plt.ylabel('Accuracy')
     plt.legend()
-    plt.title('Accuracy versus Learning Rate')
+    plt.title('Accuracy')
+
     file_name = 'accuracy_' + opt + '.png'
     plt.savefig(file_name)
+    plt.clf()
 
     for i in range(len(rates)):
-        plt.plot(rates[i], losses[i], label = f'$r$ = {rates[i]:.3f}')
+        plt.plot(x, losses[i], label = f'$r$ = {rates[i]:.2e}')
 
-    plt.xlabel('Learning rates')
+    plt.xlabel('Number of epochs')
     plt.ylabel('Loss')
     plt.legend()
-    plt.title('Loss versus Learning Rate')
+    plt.title('Loss')
+
     file_name = 'loss_' + opt + '.png'
     plt.savefig(file_name)
+    plt.clf()
+
+
+def vary_learning_rate(train_path, test_path, img_size, num_classes, optimizer = 'Adam'):
+    x_train, y_train = np.load(train_path[0]), np.load(train_path[1])
+    x_test, y_test = np.load(test_path[0]), np.load(test_path[1])
+
+    rates = np.logspace(-6, -2, 5)
+    accuracies = []
+    losses = []
+
+    for i in range(len(rates)):
+        print(f"Learning rate = {rates[i]:.3e}")
+        crnn = ConvNet(img_size, num_classes, model_num = 1)
+        model = crnn.get_model()
+
+        if optimizer == 'Adam':
+            opt = optimizers.Adam(learning_rate = rates[i]) 
+
+        else:
+            opt = optimizers.SGD(learning_rate = rates[i])
+
+        model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
+        hist = model.fit(x_train, y_train.T, epochs = 7, batch_size = 9)
+
+        accuracies.append(hist.history['accuracy'])
+        losses.append(hist.history['loss'])
+        print('-' * 35)
+        print('-' * 35)
+
+    plot(optimizer, rates, losses, accuracies)
