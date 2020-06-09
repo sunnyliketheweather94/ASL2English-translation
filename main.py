@@ -60,8 +60,13 @@ import utils
 # print("x_test: ", x_test.shape)
 # print("y_test: ", y_test.shape)
 
-train_paths = ('/Users/teresanoyola/Desktop/CS230/Project/x_train_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/y_train_crnn.npy')
-test_paths = ('/Users/teresanoyola/Desktop/CS230/Project/x_test_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/y_test_crnn.npy')
+#train_paths = ('/Users/teresanoyola/Desktop/CS230/Project/x_train_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/y_train_crnn.npy')
+#test_paths = ('/Users/teresanoyola/Desktop/CS230/Project/x_test_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/y_test_crnn.npy')
+
+train_paths = ('/home/ubuntu/x_train_crnn.npy', '/home/ubuntu/y_train_crnn.npy')
+test_paths = ('/home/ubuntu/x_test_crnn.npy', '/home/ubuntu/y_test_crnn.npy')
+
+
 
 # 3D CNN
 #img_size = (105, 125, 150, 3)
