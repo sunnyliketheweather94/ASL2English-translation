@@ -399,7 +399,7 @@ class CRNN:
         plt.legend()
 
         file_name = exp_name + '_accuracy.png'
-        plt.savefig(exp_name)
+        plt.savefig(file_name)
         plt.clf()
 
     ############################################################################

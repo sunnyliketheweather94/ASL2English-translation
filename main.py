@@ -130,15 +130,15 @@ import utils
 #VM
 
 #shuffled 3D CNN
-#train_paths = ('/home/ubuntu/shuffled_data/x_train_3Dcnn.npy', '/home/ubuntu/shuffled_data/y_train_3Dcnn.npy')
-#test_paths = ('/home/ubuntu/shuffled_data/x_test_3Dcnn.npy', '/home/ubuntu/shuffled_data/y_test_3Dcnn.npy')
+train_paths = ('/home/ubuntu/shuffled_data/x_train_3Dcnn.npy', '/home/ubuntu/shuffled_data/y_train_3Dcnn.npy')
+test_paths = ('/home/ubuntu/shuffled_data/x_test_3Dcnn.npy', '/home/ubuntu/shuffled_data/y_test_3Dcnn.npy')
 #non-shuffled 3D CNN
 # train_paths = ('/home/ubuntu/non_shuffled_data/x_train_3Dcnn.npy', '/home/ubuntu/non_shuffled_data/y_train_3Dcnn.npy')
 # test_paths = ('/home/ubuntu/non_shuffled_data/x_test_3Dcnn.npy', '/home/ubuntu/non_shuffled_data/y_test_3Dcnn.npy')
 
 #shuffled CRNN
-train_paths = ('/home/ubuntu/shuffled_data/x_train_crnn.npy', '/home/ubuntu/shuffled_data/y_train_crnn.npy')
-test_paths = ('/home/ubuntu/shuffled_data/x_test_crnn.npy', '/home/ubuntu/shuffled_data/y_test_crnn.npy')
+#train_paths = ('/home/ubuntu/shuffled_data/x_train_crnn.npy', '/home/ubuntu/shuffled_data/y_train_crnn.npy')
+#test_paths = ('/home/ubuntu/shuffled_data/x_test_crnn.npy', '/home/ubuntu/shuffled_data/y_test_crnn.npy')
 #non-shuffled CRNN
 # train_paths = ('/home/ubuntu/non_shuffled_data/x_train_crnn.npy', '/home/ubuntu/non_shuffled_data/y_train_crnn.npy')
 # test_paths = ('/home/ubuntu/non_shuffled_data/x_test_crnn.npy', '/home/ubuntu/non_shuffled_data/y_test_crnn.npy')
@@ -147,19 +147,19 @@ test_paths = ('/home/ubuntu/shuffled_data/x_test_crnn.npy', '/home/ubuntu/shuffl
 '''Create, train and evaluate models'''
 
 # 3D CNN
-#img_size = (208, 50, 60, 3)
-#num_classes = 535
-#cnn_model = cnn.ConvNet(img_size, num_classes, model_num = 1) # create a 3D-CNN
-#cnn_model.summary() # print summary
-#cnn_model.train(train_paths, test_paths, exp_name = 'Exp1') # trains model with epochs = 50, batch_size = 16
+img_size = (208, 50, 60, 3)
+num_classes = 535
+cnn_model = cnn.ConvNet(img_size, num_classes, model_num = 3) # create a 3D-CNN
+cnn_model.summary() # print summary
+cnn_model.train(train_paths, test_paths, exp_name = 'Exp3') # trains model with epochs = 50, batch_size = 16
 #cnn_model.vary_AdamLR(train_paths[0], train_paths[1], test_paths[0], test_paths[1])
 #cnn_model.vary_SGDLR(train_paths[0], train_paths[1], test_paths[0], test_paths[1])
 
 # #CRNN
-img_size = (50, 60, 3)
-num_classes = 535
-crnn_model = crnn.CRNN(img_size, num_classes, model_num = 1) # create a CRNN
-crnn_model.summary() # print summary
-crnn_model.train(train_paths, test_paths, exp_name = "Exp1") # trains model with epochs = 50, batch_size = 16
+#img_size = (50, 60, 3)
+#num_classes = 535
+#crnn_model = crnn.CRNN(img_size, num_classes, model_num = 1) # create a CRNN
+#crnn_model.summary() # print summary
+#crnn_model.train(train_paths, test_paths, exp_name = "Exp1") # trains model with epochs = 50, batch_size = 16
 # utils.vary_AdamLR(train_paths, test_paths)
 # utils.vary_SGDLR(train_paths, test_paths)
