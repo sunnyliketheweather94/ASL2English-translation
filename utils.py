@@ -5,8 +5,8 @@ def vary_adamLR(train_path, test_path):
     x_train, y_train = np.load(train_path[0]), np.load(train_path[1])
     x_test, y_test = np.load(test_path[0]), np.load(test_path[1])
 
-    img_size = (187, 50, 60, 3)
-    num_classes = 194
+    img_size = (208, 50, 60, 3)
+    num_classes = 535
 
     rates = np.linspace(10e-8, 10e-5, 5)
     accuracies = []

@@ -124,13 +124,14 @@ class ConvNet:
         model = models.Sequential()
 
         model.add(Conv3D(2, kernel_size = (3, 3, 3), input_shape = self.img_shape, kernel_regularizer = regularizers.l2(0.1)))
+        #model.add(Conv3D(2, kernel_size = (3, 3, 3), input_shape = self.img_shape))
         model.add(Dropout(0.4))
         model.add(Activation('relu'))
         model.add(BatchNormalization())
         model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
 
-        model.add(Conv3D(4, kernel_size = (3, 3, 3)))
-        # model.add(Conv3D(4, kernel_size = (3, 3, 3), kernel_regularizer = regularizers.l2(0.1\ )))    
+        #model.add(Conv3D(4, kernel_size = (3, 3, 3)))
+        model.add(Conv3D(4, kernel_size = (3, 3, 3), kernel_regularizer = regularizers.l2(0.1)))    
         model.add(Dropout(0.4))
         model.add(Activation('relu'))
         model.add(BatchNormalization())
