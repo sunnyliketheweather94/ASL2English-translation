@@ -72,10 +72,10 @@ import utils
 # y_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/shuffled_data/y_test_crnn.npy')
 
  ## non-shuffled CRNN
-x_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/x_train_crnn.npy') # CRNN
-y_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_train_crnn.npy')
-x_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/x_test_crnn.npy') # CRNN
-y_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_test_crnn.npy')
+# x_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/x_train_crnn.npy') # CRNN
+# y_train = np.load('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_train_crnn.npy')
+# x_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/x_test_crnn.npy') # CRNN
+# y_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_test_crnn.npy')
 
 # VM
 
@@ -104,10 +104,10 @@ y_test = np.load('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_
 # y_test = np.load('/home/ubuntu/non_shuffled_data/y_test_crnn.npy')
 
 # check correctness
-print("x_train: ", x_train.shape)
-print("y_train: ", y_train.shape)
-print("x_test: ", x_test.shape)
-print("y_test: ", y_test.shape)
+# print("x_train: ", x_train.shape)
+# print("y_train: ", y_train.shape)
+# print("x_test: ", x_test.shape)
+# print("y_test: ", y_test.shape)
 
 '''Specify train/test paths'''
 
@@ -117,15 +117,15 @@ print("y_test: ", y_test.shape)
 train_paths = ('/Users/teresanoyola/Desktop/CS230/Project/shuffled_data/x_train_3Dcnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/shuffled_data/y_train_3Dcnn.npy')
 test_paths = ('/Users/teresanoyola/Desktop/CS230/Project/shuffled_data/x_test_3Dcnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/shuffled_data/y_test_3Dcnn.npy')
 #non_shuffled 3d CNN
-train_paths = ('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/x_train_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_train_crnn.npy')
-test_paths = ('/Users/teresanoyola/Desktop/CS230/Project/non-shuffled_data/x_test_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_test_crnn.npy')
+# train_paths = ('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/x_train_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_train_crnn.npy')
+# test_paths = ('/Users/teresanoyola/Desktop/CS230/Project/non-shuffled_data/x_test_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_test_crnn.npy')
 
 #shuffled CRNN
 #train_paths = ('/Users/teresanoyola/Desktop/CS230/Project/shuffled_data/x_train_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/shuffled_data/y_train_crnn.npy')
 #test_paths = ('/Users/teresanoyola/Desktop/CS230/Project/shuffled_data/x_test_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/shuffled_data/y_test_crnn.npy')
 #non_shuffled CRNN
-train_paths = ('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/x_train_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_train_crnn.npy')
-test_paths = ('/Users/teresanoyola/Desktop/CS230/Project/non-shuffled_data/x_test_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_test_crnn.npy')
+# train_paths = ('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/x_train_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_train_crnn.npy')
+# test_paths = ('/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/x_test_crnn.npy', '/Users/teresanoyola/Desktop/CS230/Project/non_shuffled_data/y_test_crnn.npy')
 
 #VM
 
@@ -147,11 +147,11 @@ test_paths = ('/Users/teresanoyola/Desktop/CS230/Project/non-shuffled_data/x_tes
 '''Create, train and evaluate models'''
 
 # 3D CNN
-# img_size = (105, 125, 150, 3)
-# num_classes = 191
-# cnn_model = cnn.ConvNet(img_size, num_classes, model_num = 1) # create a 3D-CNN
-# cnn_model.summary() # print summary
-# cnn_model.train(train_paths, test_paths) # trains model with epochs = 50, batch_size = 16
+img_size = (208, 50, 60, 3)
+num_classes = 535
+cnn_model = cnn.ConvNet(img_size, num_classes, model_num = 1) # create a 3D-CNN
+cnn_model.summary() # print summary
+cnn_model.train(train_paths, test_paths, exp_name = 'Exp1') # trains model with epochs = 50, batch_size = 16
 #cnn_model.vary_AdamLR(train_paths[0], train_paths[1], test_paths[0], test_paths[1])
 #cnn_model.vary_SGDLR(train_paths[0], train_paths[1], test_paths[0], test_paths[1])
 

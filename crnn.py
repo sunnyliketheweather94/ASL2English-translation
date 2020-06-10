@@ -13,24 +13,25 @@ class CRNN:
     def __init__(self, img_shape, num_classes, model_num):
         self.img_shape = img_shape
         self.num_classes = num_classes
+        model = None
 
-        if model_num == 11: # just regular network
-            model = self.exp1_1()
+        if model_num == 1: # just regular network
+            model = self.exp1()
 
-        elif model_num == 12: # with L2-regularization
-            model = self.exp1_2()
+        elif model_num == 2: # with L2-regularization
+            model = self.exp2()
 
-        elif model_num == 13: # with L1-regularization
-            model = self.exp1_3()
+        elif model_num == 3: # with L1-regularization
+            model = self.exp3()
 
-        elif model_num == 14: # with dropout
-            model = self.exp1_4()
+        elif model_num == 4: # with dropout
+            model = self.exp4()
 
-        elif model_num == 15: # with L2-regularization + dropout
-            model = self.exp1_5()
+        elif model_num == 5: # with L2-regularization + dropout
+            model = self.exp5()
 
-        elif model_num == 16: # with L1-regularization + dropout
-            model = self.exp1_6()
+        elif model_num == 6: # with L1-regularization + dropout
+            model = self.exp6()
 
         self.model = model
 
@@ -39,7 +40,7 @@ class CRNN:
 
     ############################################################################
 
-    def exp1_1(self):
+    def exp1(self):
         """
         build CNN-RNN model
         """
@@ -88,7 +89,7 @@ class CRNN:
 
     ############################################################################
 
-    def exp1_2(self):
+    def exp2(self):
         """
         build CNN-RNN model
         """
@@ -137,7 +138,7 @@ class CRNN:
 
     ############################################################################
 
-    def exp1_3(self):
+    def exp3(self):
         """
         build CNN-RNN model
         """
@@ -186,7 +187,7 @@ class CRNN:
 
     ############################################################################
 
-    def exp1_4(self):
+    def exp4(self):
         """
         build CNN-RNN model
         """
@@ -242,7 +243,7 @@ class CRNN:
 
     ############################################################################
 
-    def exp1_5(self):
+    def exp5(self):
         """
         build CNN-RNN model
         """
@@ -298,7 +299,7 @@ class CRNN:
 
     ############################################################################
 
-    def exp1_6(self):
+    def exp6(self):
         """
         build CNN-RNN model
         """

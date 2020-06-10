@@ -13,24 +13,25 @@ class ConvNet:
     def __init__(self, shape, num_classes, model_num):
         self.img_shape = shape
         self.num_classes = num_classes
+        model = None
 
-        if model_num == 11:
-            model = self.exp1_1() 
+        if model_num == 1:
+            model = self.exp1()
 
-        elif model_num == 12:
-            model = self.exp1_2()
+        elif model_num == 2:
+            model = self.exp2()
 
-        elif model_num == 13:
-            model = self.exp1_3()
+        elif model_num == 3:
+            model = self.exp3()
 
-        elif model_num == 14:
-            model = self.exp1_4()
+        elif model_num == 4:
+            model = self.exp4()
 
-        elif model_num == 15:
-            model = self.exp1_5()
+        elif model_num == 5:
+            model = self.exp5()
 
-        elif model_num == 16:
-            model = self.exp1_6()
+        elif model_num == 6:
+            model = self.exp6()
 
         self.model = model
 
@@ -40,7 +41,7 @@ class ConvNet:
     def get_model(self):
         return self.model
 
-    def exp1_1(self): # plain old regular network
+    def exp1(self): # plain old regular network
         model = models.Sequential()
 
         model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape))
@@ -59,7 +60,7 @@ class ConvNet:
 
         return model
 
-    def exp1_2(self): # just L2-regularization
+    def exp2(self): # just L2-regularization
         model = models.Sequential()
 
         model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, kernel_regularizer = regularizers.l2(0.1)))
@@ -78,7 +79,7 @@ class ConvNet:
 
         return model
 
-    def exp1_3(self): # just L1-regularization
+    def exp3(self): # just L1-regularization
         model = models.Sequential()
 
         model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, kernel_regularizer = regularizers.l1(0.1)))
@@ -97,7 +98,7 @@ class ConvNet:
 
         return model
 
-    def exp1_4(self): # just dropout
+    def exp4(self): # just dropout
         model = models.Sequential()
 
         model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape))
@@ -119,7 +120,7 @@ class ConvNet:
 
         return model
 
-    def exp1_5(self): # dropout + L2-regularization
+    def exp5(self): # dropout + L2-regularization
         model = models.Sequential()
 
         model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, kernel_regularizer = regularizers.l2(0.1)))
@@ -141,7 +142,7 @@ class ConvNet:
 
         return model
 
-    def exp1_6(self): # dropout + L1-regularization
+    def exp6(self): # dropout + L1-regularization
         model = models.Sequential()
 
         model.add(Conv3D(16, kernel_size = (3, 3, 3), input_shape = self.img_shape, kernel_regularizer = regularizers.l1(0.1)))
