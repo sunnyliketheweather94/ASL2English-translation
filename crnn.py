@@ -39,6 +39,9 @@ class CRNN:
     def summary(self):
         self.model.summary()
 
+    def get_model(self):
+        return self.model
+    
     ############################################################################
 
     def exp1(self):
@@ -132,7 +135,7 @@ class CRNN:
         x = LSTM(units = 64, return_sequences = True, kernel_regularizer = regularizers.l2(0.1))(x)
         x = LSTM(units = 64, return_sequences = False, kernel_regularizer = regularizers.l2(0.1))(x)
 
-        x = Dense(units = num_classes)(x)
+        x = Dense(units = self.num_classes)(x)
         x = Activation('softmax')(x)
 
         return keras.Model(inputs = img_input, outputs = x, name='CRNN')
@@ -181,7 +184,7 @@ class CRNN:
         x = LSTM(units = 64, return_sequences=True, kernel_regularizer = regularizers.l1(0.1))(x)
         x = LSTM(units = 64, return_sequences=False, kernel_regularizer = regularizers.l1(0.1))(x)
 
-        x = Dense(units = num_classes)(x)
+        x = Dense(units = self.num_classes)(x)
         x = Activation('softmax')(x)
 
         return keras.Model(inputs = img_input, outputs = x, name='CRNN')
@@ -237,7 +240,7 @@ class CRNN:
         x = LSTM(units = 64, return_sequences=True)(x)
         x = LSTM(units = 64, return_sequences=False)(x)
 
-        x = Dense(units = num_classes)(x)
+        x = Dense(units = self.num_classes)(x)
         x = Activation('softmax')(x)
 
         return keras.Model(inputs = img_input, outputs = x, name='CRNN')
@@ -293,7 +296,7 @@ class CRNN:
         x = LSTM(units = 64, return_sequences = True, kernel_regularizer = regularizers.l2(0.1))(x)
         x = LSTM(units = 64, return_sequences = False, kernel_regularizer = regularizers.l2(0.1))(x)
 
-        x = Dense(units = num_classes)(x)
+        x = Dense(units = self.num_classes)(x)
         x = Activation('softmax')(x)
 
         return keras.Model(inputs = img_input, outputs = x, name='CRNN')
@@ -351,7 +354,7 @@ class CRNN:
         x = LSTM(units = 64, return_sequences=True, kernel_regularizer = regularizers.l1(0.1))(x)
         x = LSTM(units = 64, return_sequences=False, kernel_regularizer = regularizers.l1(0.1))(x)
 
-        x = Dense(units = num_classes)(x)
+        x = Dense(units = self.num_classes)(x)
         x = Activation('softmax')(x)
 
         return keras.Model(inputs = img_input, outputs = x, name='CRNN')
@@ -367,17 +370,19 @@ class CRNN:
         
         opt = optimizers.Adam(learning_rate = lr)
         self.model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
-        history = self.model.fit(x_train, y_train, epochs = num_epochs, batch_size = batch)
+        history = self.model.fit(x_train, y_train, epochs = num_epochs, batch_size = batch, validation_split = 0.2)
         # self.history = self.model.fit(x_train, y_train, epochs = num_epochs, batch_size = batch, callbacks = [tensorboard])
-
+        #hist_dict = history.history
+        #print(hist_dict.keys())
+        
         print('-' * 35)
         print('-' * 35)
         print("Finished training....\nNow Evaluating:")
 
-        train_eval = self.model.evaluate(x_train, y_train.T, verbose = 0)
+        train_eval = self.model.evaluate(x_train, y_train, verbose = 0)
         print("Train evaluation:\n\tLoss = {}\n\tAccuracy = {:.2f}%".format(train_eval[0], train_eval[1] * 100))
 
-        test_eval = self.model.evaluate(x_test, y_test.T, verbose = 0)
+        test_eval = self.model.evaluate(x_test, y_test, verbose = 0)
         print("Test evaluation:\n\tLoss = {}\n\tAccuracy = {}%".format(test_eval[0], test_eval[1] * 100))
 
         plt.plot(history.history['loss'], label = 'Loss')
