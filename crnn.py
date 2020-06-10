@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
+from tensorflow import keras
 from tensorflow.keras.layers import Activation, Conv2D, MaxPool2D, Flatten, Dense
 from tensorflow.keras.layers import Dropout, Input, BatchNormalization, LSTM, Reshape
 from tensorflow.keras import optimizers, losses, regularizers
@@ -82,7 +83,7 @@ class CRNN:
         x = LSTM(units = 64, return_sequences=True)(x)
         x = LSTM(units = 64, return_sequences=False)(x)
 
-        x = Dense(units = num_classes)(x)
+        x = Dense(units = self.num_classes)(x)
         x = Activation('softmax')(x)
 
         return keras.Model(inputs = img_input, outputs = x, name='CRNN')
@@ -316,6 +317,7 @@ class CRNN:
         x = BatchNormalization()(x)
         x = Activation('relu')(x)
         x = MaxPool2D(pool_size = 2, padding = 'same')(x)
+
 
         x = Conv2D(filters = 256, kernel_size = 3, padding = 'same', kernel_regularizer = regularizers.l1(0.1))(x)
         x = Dropout(rate = 0.4)(x)
