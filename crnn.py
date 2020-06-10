@@ -355,7 +355,7 @@ class CRNN:
         return keras.Model(inputs = img_input, outputs = x, name='CRNN')
 
 
-    def train(self, train_paths, test_paths, num_epochs = 7, batch = 1024, lr = 0.0001):
+    def train(self, train_paths, test_paths, exp_name, num_epochs = 7, batch = 1024, lr = 0.0001):
         x_train, y_train = np.load(train_paths[0]), np.load(train_paths[1])
         x_test, y_test = np.load(test_paths[0]), np.load(test_paths[1])
 
