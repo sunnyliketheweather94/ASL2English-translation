@@ -49,7 +49,7 @@ class ConvNet:
         model.add(BatchNormalization())
         model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
 
-        model.add(Conv3D(16, kernel_size = (3, 3, 3)))
+        model.add(Conv3D(32, kernel_size = (3, 3, 3)))
         model.add(Activation('relu'))
         model.add(BatchNormalization())
         model.add(MaxPooling3D(pool_size = (3, 3, 3), padding = 'valid'))
