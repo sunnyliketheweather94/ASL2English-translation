@@ -79,9 +79,6 @@ class Dataset:
         self.Int2Words = {c : i for i, c in self.Words2Int.items()}
         self.num_classes = len(self.Words2Int)
 
-        #3D CNN
-        #self.img_size = (self.max_frames, 50, 60, 3)
-        #CRNN
         self.img_size = (50, 60, 3)
 
 
