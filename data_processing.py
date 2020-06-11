@@ -31,7 +31,6 @@ class Dataset:
         for item in df['FramesPerVideo'].values:
             self.total_frames += item
 
-        #print(df['FramesPerVideo'].to_numpy())
         paths = [os.path.join(folder, s) for folder, subfolder, _ \
                  in os.walk(data_path) for s in sorted(subfolder) if "video" in s]
 
@@ -61,12 +60,6 @@ class Dataset:
 
         self.total_train_frames = self.train['FramesPerVideo'].sum
         self.total_test_frames = self.test['FramesPerVideo'].sum
-        # for item in self.train['FramesPerVideo'].values:
-        #     self.total_train_frames += item
-        #
-        # for item in self.test['FramesPerVideo'].values:
-        #     self.total_test_frames += item
-
 
         print("Train data: {}".format(len(self.train)))
         print("Test data: {}".format(len(self.test)))
@@ -87,7 +80,7 @@ class Dataset:
         self.num_classes = len(self.Words2Int)
 
         #3D CNN
-        #self.img_size = (self.max_frames, 125, 150, 3) ?
+        #self.img_size = (self.max_frames, 50, 60, 3)
         #CRNN
         self.img_size = (50, 60, 3)
 
@@ -204,7 +197,6 @@ class Dataset:
         else:
             data = self.test
 
-        #print(frames_)
         video_numbers = data['Video']
 
         '''Create x_train(no padding)'''
@@ -224,17 +216,9 @@ class Dataset:
                 x[i, :, :, :] = self.get_frame_matrix(path)
                 idx = self.get_oneHotIndex(vid_num)
                 y[i, idx] = 1
-                #y[i] = self.get_oneHotIndex(vid_num)
                 i += 1
             print("Done with video:", vid_num)
         print("the total size of x is {}".format(x.shape))
-
-        # # create y_train/test
-        #
-        # for i, vid_num in enumerate(video_numbers):
-        #     idx = self.get_oneHotIndex(vid_num)
-        #     y[idx, i] = 1
-
         print("the total size of y is {}".format(y.shape))
 
         return x, y
