@@ -372,8 +372,6 @@ class CRNN:
         self.model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
         history = self.model.fit(x_train, y_train, epochs = num_epochs, batch_size = batch, validation_split = 0.2)
         # self.history = self.model.fit(x_train, y_train, epochs = num_epochs, batch_size = batch, callbacks = [tensorboard])
-        #hist_dict = history.history
-        #print(hist_dict.keys())
         
         print('-' * 35)
         print('-' * 35)
@@ -437,33 +435,3 @@ def plot(opt, rates, losses, accuracies):
     file_name = 'loss_' + opt + '.png'
     plt.savefig(file_name)
     plt.clf()
-
-
-def vary_learning_rate(train_path, test_path, img_size, num_classes, optimizer = 'Adam'):
-    x_train, y_train = np.load(train_path[0]), np.load(train_path[1])
-    x_test, y_test = np.load(test_path[0]), np.load(test_path[1])
-
-    rates = np.logspace(-6, -2, 5)
-    accuracies = []
-    losses = []
-
-    for i in range(len(rates)):
-        print(f"Learning rate = {rates[i]:.3e}")
-        crnn = ConvNet(img_size, num_classes, model_num = 1)
-        model = crnn.get_model()
-
-        if optimizer == 'Adam':
-            opt = optimizers.Adam(learning_rate = rates[i]) 
-
-        else:
-            opt = optimizers.SGD(learning_rate = rates[i])
-
-        model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
-        hist = model.fit(x_train, y_train.T, epochs = 7, batch_size = 9)
-
-        accuracies.append(hist.history['accuracy'])
-        losses.append(hist.history['loss'])
-        print('-' * 35)
-        print('-' * 35)
-
-    plot(optimizer, rates, losses, accuracies)
