@@ -39,3 +39,29 @@ def vary_adamLR(train_path, test_path):
         print('---------------------------------------------------')
 
     plot('Adam', rates, losses, accuracies)
+
+def vary_sgdLR(train_path, test_path):
+    x_train, y_train = np.load(train_path[0]), np.load(train_path[1])
+    x_test, y_test = np.load(test_path[0]), np.load(test_path[1])
+
+    img_size = (187, 50, 60, 3)
+    num_classes = 194
+
+    rates = np.linspace(10e-6, 10e-2, 3)
+    accuracies = []
+    losses = []
+
+    for i in range(len(rates)):
+        print(f"Learning rate = {rates[i]:.3e}")
+        cnn_model = ConvNet(img_size, num_classes, model_num = 1) # create a 3D-CNN
+        model = cnn_model.get_model()
+
+        opt = optimizers.SGD(learning_rate = rates[i])
+        model.compile(optimizer = opt, loss = 'categorical_crossentropy', metrics = ['accuracy'])
+        hist = model.fit(x_train, y_train.T, epochs = 7, batch_size = 9)
+
+        accuracies.append(hist.history['accuracy'])
+        losses.append(hist.history['loss'])
+        print('---------------------------------------------------')
+
+    plot('SGD', rates, losses, accuracies)
